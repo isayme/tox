@@ -1,0 +1,8 @@
+log_level: debug
+
+method: chacha20-poly1305
+password: 123456
+remote_address: https://127.0.0.1:1443/toh2
+local_address: 0.0.0.0:8488
+cert_file: ./testdata/server.pem
+key_file: ./testdata/server.key
