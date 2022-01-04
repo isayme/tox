@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/isayme/go-logger"
 	"github.com/isayme/go-toh2/conf"
@@ -62,6 +63,7 @@ func handleConnection(conn net.Conn) {
 	md := middleware.Get(config.Method)
 	wrapRemote := md(remote, config.Password)
 
+	conn = util.NewTimeoutConn(conn, time.Duration(config.Timeout)*time.Second)
 	go io.Copy(wrapRemote, conn)
 	io.Copy(conn, wrapRemote)
 }
