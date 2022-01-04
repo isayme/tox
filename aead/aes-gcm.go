@@ -5,7 +5,7 @@ import (
 	"crypto/cipher"
 )
 
-func NewAes256GcmCipher(key []byte) (cipher.AEAD, error) {
+func NewAesGcmCipher(key []byte) (cipher.AEAD, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err

@@ -87,7 +87,11 @@ func (w *AeadWriter) Write(p []byte) (n int, err error) {
 
 	nw, err := w.writer.Write(buf[:n])
 	if err != nil {
-		return 0, errors.Wrapf(err, "write short: %d/%d", nw, n)
+		return 0, err
+	}
+
+	if nw != n {
+		return 0, errors.New("write short")
 	}
 
 	return size, nil

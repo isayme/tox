@@ -76,7 +76,7 @@ func (r *AeadReader) doRead() error {
 	}
 	util.NextNonce(r.nonce)
 
-	payloadSize := int(binary.BigEndian.Uint16(ret) & 0x3FFF)
+	payloadSize := int(binary.BigEndian.Uint16(ret))
 
 	// read payload
 	payloadBuf := bufferpool.Get(payloadSize + c.Overhead())

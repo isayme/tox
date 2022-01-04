@@ -9,3 +9,7 @@ import (
 func NewChacha20Poly1305Cipher(key []byte) (cipher.AEAD, error) {
 	return chacha20poly1305.New(key)
 }
+
+func NewXChacha20Poly1305Cipher(key []byte) (cipher.AEAD, error) {
+	return chacha20poly1305.NewX(key)
+}

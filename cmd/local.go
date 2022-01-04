@@ -7,13 +7,18 @@ import (
 	"net/http"
 
 	"github.com/isayme/go-logger"
-	"github.com/isayme/go-toh2/aead"
 	"github.com/isayme/go-toh2/conf"
+	"github.com/isayme/go-toh2/middleware"
 	"github.com/isayme/go-toh2/util"
 )
 
 func startLocal() {
 	config := conf.Get()
+
+	if middleware.NotExist(config.Method) {
+		logger.Panicf("method '%s' not support", config.Method)
+		return
+	}
 
 	addr := config.LocalAddress
 	logger.Infof("listen on %s", addr)
@@ -54,9 +59,9 @@ func handleConnection(conn net.Conn) {
 
 	logger.Info("connect http2 server ok")
 
-	w := aead.NewAeadWriter(remote, config.Password, 32, aead.NewChacha20Poly1305Cipher)
-	r := aead.NewAeadReader(remote, config.Password, 32, aead.NewChacha20Poly1305Cipher)
+	md := middleware.Get(config.Method)
+	wrapRemote := md(remote, config.Password)
 
-	go io.Copy(w, conn)
-	io.Copy(conn, r)
+	go io.Copy(wrapRemote, conn)
+	io.Copy(conn, wrapRemote)
 }
