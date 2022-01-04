@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/isayme/go-bufferpool"
 	"github.com/isayme/go-toh2/util"
 	"github.com/pkg/errors"
 )
@@ -36,7 +37,8 @@ func (w *AeadWriter) getAeadCipher() (cipher.AEAD, error) {
 		return w.aead, nil
 	}
 
-	salt := make([]byte, w.keySize)
+	salt := bufferpool.Get(w.keySize)
+	defer bufferpool.Put(salt)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
 		return nil, err
 	}
@@ -68,7 +70,9 @@ func (w *AeadWriter) Write(p []byte) (n int, err error) {
 	}
 
 	size := len(p)
-	buf := make([]byte, 2+c.Overhead()+size+c.Overhead())
+
+	buf := bufferpool.Get(2 + c.Overhead() + size + c.Overhead())
+	defer bufferpool.Put(buf)
 
 	// write size
 	binary.BigEndian.PutUint16(buf, uint16(size))

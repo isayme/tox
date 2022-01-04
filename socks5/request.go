@@ -6,6 +6,7 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/isayme/go-bufferpool"
 	"github.com/isayme/go-logger"
 	"github.com/pkg/errors"
 )
@@ -32,7 +33,8 @@ func (r *Request) Handle() error {
 }
 
 func (r *Request) negotiate() error {
-	buf := make([]byte, 256)
+	buf := bufferpool.Get(256)
+	defer bufferpool.Put(buf)
 
 	// version
 	_, err := io.ReadFull(r.rw, buf[:1])
