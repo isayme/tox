@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type AeadReader struct {
+type aeadReader struct {
 	password string
 	keySize  int
 
@@ -22,8 +22,8 @@ type AeadReader struct {
 	readBuffer *bytes.Buffer
 }
 
-func NewAeadReader(reader io.Reader, password string, keySize int, newCipher func([]byte) (cipher.AEAD, error)) *AeadReader {
-	return &AeadReader{
+func NewReader(reader io.Reader, password string, keySize int, newCipher func([]byte) (cipher.AEAD, error)) *aeadReader {
+	return &aeadReader{
 		password:   password,
 		keySize:    keySize,
 		reader:     reader,
@@ -32,7 +32,7 @@ func NewAeadReader(reader io.Reader, password string, keySize int, newCipher fun
 	}
 }
 
-func (r *AeadReader) getAeadCipher() (cipher.AEAD, error) {
+func (r *aeadReader) getAeadCipher() (cipher.AEAD, error) {
 	if r.aead != nil {
 		return r.aead, nil
 	}
@@ -56,7 +56,7 @@ func (r *AeadReader) getAeadCipher() (cipher.AEAD, error) {
 	return r.aead, nil
 }
 
-func (r *AeadReader) doRead() error {
+func (r *aeadReader) doRead() error {
 	c, err := r.getAeadCipher()
 	if err != nil {
 		return err
@@ -98,7 +98,7 @@ func (r *AeadReader) doRead() error {
 	return nil
 }
 
-func (r *AeadReader) Read(p []byte) (n int, err error) {
+func (r *aeadReader) Read(p []byte) (n int, err error) {
 	if r.readBuffer.Len() > 0 {
 		return r.readBuffer.Read(p)
 	}

@@ -7,13 +7,13 @@ import (
 )
 
 func NewChacha20Poly1305(rw io.ReadWriter, password string) io.ReadWriter {
-	r := aead.NewAeadReader(rw, password, 32, aead.NewChacha20Poly1305Cipher)
-	w := aead.NewAeadWriter(rw, password, 32, aead.NewChacha20Poly1305Cipher)
+	r := aead.NewReader(rw, password, 32, aead.NewChacha20Poly1305Cipher)
+	w := aead.NewWriter(rw, password, 32, aead.NewChacha20Poly1305Cipher)
 	return newReadWriter(r, w)
 }
 
 func NewXChacha20Poly1305(rw io.ReadWriter, password string) io.ReadWriter {
-	r := aead.NewAeadReader(rw, password, 32, aead.NewChacha20Poly1305Cipher)
-	w := aead.NewAeadWriter(rw, password, 32, aead.NewChacha20Poly1305Cipher)
+	r := aead.NewReader(rw, password, 32, aead.NewXChacha20Poly1305Cipher)
+	w := aead.NewWriter(rw, password, 32, aead.NewXChacha20Poly1305Cipher)
 	return newReadWriter(r, w)
 }

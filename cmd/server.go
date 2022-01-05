@@ -17,7 +17,7 @@ func startServer() {
 	config := conf.Get()
 
 	if middleware.NotExist(config.Method) {
-		logger.Panicf("method '%s' not support", config.Method)
+		logger.Errorf("method '%s' not support", config.Method)
 		return
 	}
 

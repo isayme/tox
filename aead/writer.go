@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type AeadWriter struct {
+type aeadWriter struct {
 	password string
 	keySize  int
 
@@ -23,8 +23,8 @@ type AeadWriter struct {
 	nonce []byte
 }
 
-func NewAeadWriter(writer io.Writer, password string, keySize int, newCipher func([]byte) (cipher.AEAD, error)) *AeadWriter {
-	return &AeadWriter{
+func NewWriter(writer io.Writer, password string, keySize int, newCipher func([]byte) (cipher.AEAD, error)) *aeadWriter {
+	return &aeadWriter{
 		password:  password,
 		keySize:   keySize,
 		writer:    writer,
@@ -32,7 +32,7 @@ func NewAeadWriter(writer io.Writer, password string, keySize int, newCipher fun
 	}
 }
 
-func (w *AeadWriter) getAeadCipher() (cipher.AEAD, error) {
+func (w *aeadWriter) getAeadCipher() (cipher.AEAD, error) {
 	if w.aead != nil {
 		return w.aead, nil
 	}
@@ -63,7 +63,7 @@ func (w *AeadWriter) getAeadCipher() (cipher.AEAD, error) {
 	return w.aead, nil
 }
 
-func (w *AeadWriter) Write(p []byte) (n int, err error) {
+func (w *aeadWriter) Write(p []byte) (n int, err error) {
 	c, err := w.getAeadCipher()
 	if err != nil {
 		return 0, err
