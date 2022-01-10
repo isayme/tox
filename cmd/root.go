@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/isayme/go-toh2/util"
+	"github.com/isayme/tox/util"
 	"github.com/spf13/cobra"
 )
 

@@ -7,9 +7,9 @@ import (
 	"net/url"
 
 	"github.com/isayme/go-logger"
-	"github.com/isayme/go-toh2/conf"
-	"github.com/isayme/go-toh2/middleware"
-	"github.com/isayme/go-toh2/socks5"
+	"github.com/isayme/tox/conf"
+	"github.com/isayme/tox/middleware"
+	"github.com/isayme/tox/socks5"
 	"github.com/posener/h2conn"
 )
 

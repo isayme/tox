@@ -1,6 +1,6 @@
 package main
 
-import "github.com/isayme/go-toh2/cmd"
+import "github.com/isayme/tox/cmd"
 
 func main() {
 	cmd.Execute()

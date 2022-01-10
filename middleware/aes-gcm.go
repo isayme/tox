@@ -3,7 +3,7 @@ package middleware
 import (
 	"io"
 
-	"github.com/isayme/go-toh2/aead"
+	"github.com/isayme/tox/aead"
 )
 
 func NewAes128Gcm(rw io.ReadWriter, password string) io.ReadWriter {

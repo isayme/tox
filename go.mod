@@ -1,4 +1,4 @@
-module github.com/isayme/go-toh2
+module github.com/isayme/tox
 
 go 1.17
 

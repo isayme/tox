@@ -3,7 +3,7 @@ package middleware
 import (
 	"io"
 
-	"github.com/isayme/go-toh2/stream"
+	"github.com/isayme/tox/stream"
 )
 
 func NewAes256Cfb(rw io.ReadWriter, password string) io.ReadWriter {

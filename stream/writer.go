@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"github.com/isayme/go-bufferpool"
-	"github.com/isayme/go-toh2/util"
+	"github.com/isayme/tox/util"
 )
 
 type streamWriter struct {

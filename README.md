@@ -1,2 +1,3 @@
-# go-toh2
-tcp over http2
+# tox
+
+tcp over http2/websocket/grpc

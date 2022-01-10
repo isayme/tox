@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/isayme/go-logger"
-	"github.com/isayme/go-toh2/conf"
-	"github.com/isayme/go-toh2/middleware"
-	"github.com/isayme/go-toh2/util"
+	"github.com/isayme/tox/conf"
+	"github.com/isayme/tox/middleware"
+	"github.com/isayme/tox/util"
 )
 
 func startLocal() {

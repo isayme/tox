@@ -3,7 +3,7 @@ package middleware
 import (
 	"io"
 
-	"github.com/isayme/go-toh2/aead"
+	"github.com/isayme/tox/aead"
 )
 
 func NewChacha20Poly1305(rw io.ReadWriter, password string) io.ReadWriter {
