@@ -11,7 +11,7 @@ RUN mkdir -p ./dist  \
   && GO111MODULE=on GOPROXY=https://goproxy.io,direct go mod download \
   && go build -ldflags "-X github.com/isayme/tox/util.Name=${APP_NAME} \
   -X github.com/isayme/tox/util.Version=${APP_VERSION}" \
-  -o ./dist/toh2 main.go
+  -o ./dist/tox main.go
 
 FROM alpine
 WORKDIR /app
@@ -22,8 +22,8 @@ ARG APP_VERSION
 ENV APP_VERSION ${APP_VERSION}
 
 # default config file
-ENV CONF_FILE_PATH=/etc/toh2.yaml
+ENV CONF_FILE_PATH=/etc/tox.yaml
 
-COPY --from=builder /app/dist/toh2 /app/toh2
+COPY --from=builder /app/dist/tox /app/tox
 
-CMD ["/app/toh2", "-h"]
+CMD ["/app/tox", "-h"]

@@ -4,7 +4,7 @@ import "fmt"
 
 // version info
 var (
-	Name        = "@isayme/toh"
+	Name        = "@isayme/tox"
 	Version     = "unknown"
 	BuildTime   = "unknown"
 	GitRevision = "unknown"

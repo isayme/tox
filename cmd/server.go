@@ -1,16 +1,14 @@
 package cmd
 
 import (
-	"fmt"
+	"io"
 	"log"
-	"net/http"
-	"net/url"
 
 	"github.com/isayme/go-logger"
 	"github.com/isayme/tox/conf"
 	"github.com/isayme/tox/middleware"
 	"github.com/isayme/tox/socks5"
-	"github.com/posener/h2conn"
+	"github.com/isayme/tox/tunnel"
 )
 
 func startServer() {
@@ -21,25 +19,15 @@ func startServer() {
 		return
 	}
 
-	URL, err := url.Parse(config.RemoteAddress)
+	ts, err := tunnel.NewServer(config.Tunnel)
 	if err != nil {
-		logger.Errorf("parse remove_address fail: %s", err.Error())
+		logger.Errorw("new tunnel server fail", "err", err)
 		return
 	}
 
-	http.HandleFunc("/toh2", func(rw http.ResponseWriter, req *http.Request) {
-		conn, err := h2conn.Accept(rw, req)
-		if err != nil {
-			logger.Infof("failed creating connection from %s: %s", req.RemoteAddr, err)
-			http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-		defer conn.Close()
-
-		logger.Info("new connection from %s", req.RemoteAddr)
-
+	err = ts.ListenAndServeTLS(config.CertFile, config.KeyFile, func(rw io.ReadWriter) {
 		mw := middleware.Get(config.Method)
-		wrapConn := mw(conn, config.Password)
+		wrapConn := mw(rw, config.Password)
 
 		request := socks5.NewRequest(wrapConn)
 		if err := request.Handle(); err != nil {
@@ -48,8 +36,5 @@ func startServer() {
 		}
 	})
 
-	addr := fmt.Sprintf(":%s", URL.Port())
-	logger.Infof("listen on %s", addr)
-	err = http.ListenAndServeTLS(addr, "./testdata/server.pem", "./testdata/server.key", nil)
 	log.Fatal(err)
 }

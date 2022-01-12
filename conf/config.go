@@ -8,14 +8,15 @@ import (
 )
 
 type Config struct {
-	LogLevel      string `json:"log_level" yaml:"log_level"`
-	Method        string `json:"method" yaml:"method"`
-	Password      string `json:"password" yaml:"password"`
-	Timeout       int    `json:"timeout" yaml:"timeout"`
-	RemoteAddress string `json:"remote_address" yaml:"remote_address"`
-	CertFile      string `json:"cert_file" yaml:"cert_file"`
-	KeyFile       string `json:"key_file" yaml:"key_file"`
-	LocalAddress  string `json:"local_address" yaml:"local_address"`
+	LogLevel              string `json:"log_level" yaml:"log_level"`
+	Method                string `json:"method" yaml:"method"`
+	Password              string `json:"password" yaml:"password"`
+	Timeout               int    `json:"timeout" yaml:"timeout"`
+	Tunnel                string `json:"tunnel" yaml:"tunnel"`
+	CertFile              string `json:"cert_file" yaml:"cert_file"`
+	KeyFile               string `json:"key_file" yaml:"key_file"`
+	TLSInsecureSkipVerify bool   `json:"tls_insecure_skip_verify" yaml:"tls_insecure_skip_verify"`
+	LocalAddress          string `json:"local_address" yaml:"local_address"`
 }
 
 var once sync.Once

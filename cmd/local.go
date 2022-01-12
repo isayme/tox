@@ -4,12 +4,12 @@ import (
 	"context"
 	"io"
 	"net"
-	"net/http"
 	"time"
 
 	"github.com/isayme/go-logger"
 	"github.com/isayme/tox/conf"
 	"github.com/isayme/tox/middleware"
+	"github.com/isayme/tox/tunnel"
 	"github.com/isayme/tox/util"
 )
 
@@ -28,6 +28,13 @@ func startLocal() {
 		logger.Errorw("Listen fail", "err", err)
 		return
 	}
+	defer l.Close()
+
+	tc, err := tunnel.NewClient(config.Tunnel)
+	if err != nil {
+		logger.Errorw("new tunnel client fail", "err", err)
+		return
+	}
 
 	for {
 		conn, err := l.Accept()
@@ -36,29 +43,24 @@ func startLocal() {
 			continue
 		}
 
-		go handleConnection(conn)
+		go handleConnection(conn, tc)
 	}
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, tc tunnel.Client) {
 	config := conf.Get()
 
 	logger.Infow("new connection", "remoteAddr", conn.RemoteAddr().String())
 	defer conn.Close()
 
-	remote, resp, err := util.H2Client.Connect(context.Background(), config.RemoteAddress)
+	remote, err := tc.Connect(context.Background())
 	if err != nil {
-		logger.Errorw("client.Connect fail", "err", err)
+		logger.Errorw("connect tunnel server fail", "err", err)
 		return
 	}
 	defer remote.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		logger.Errorf("bad status code: %d", resp.StatusCode)
-		return
-	}
-
-	logger.Info("connect http2 server ok")
+	logger.Info("connect tunnel server ok")
 
 	md := middleware.Get(config.Method)
 	wrapRemote := md(remote, config.Password)

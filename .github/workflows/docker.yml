@@ -7,8 +7,8 @@ on:
       - v*
 
 env:
-  APP_NAME: toh2
-  DOCKERHUB_REPO: isayme/toh2
+  APP_NAME: tox
+  DOCKERHUB_REPO: isayme/tox
 
 jobs:
   main:
