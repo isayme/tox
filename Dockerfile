@@ -7,9 +7,8 @@ ARG APP_VERSION
 ENV APP_VERSION ${APP_VERSION}
 
 COPY . .
-RUN mkdir -p ./dist  \
-  && GO111MODULE=on go mod download \
-  && go build -ldflags "-X github.com/isayme/tox/util.Name=${APP_NAME} \
+RUN mkdir -p ./dist && GO111MODULE=on go mod download
+RUN go build -ldflags "-X github.com/isayme/tox/util.Name=${APP_NAME} \
   -X github.com/isayme/tox/util.Version=${APP_VERSION}" \
   -o ./dist/tox main.go
 
