@@ -30,8 +30,8 @@ func NewClient(tunnel string) (*Client, error) {
 		grpc.WithBackoffMaxDelay(pool.BackoffMaxDelay),
 		grpc.WithInitialWindowSize(pool.InitialWindowSize),
 		grpc.WithInitialConnWindowSize(pool.InitialConnWindowSize),
-		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(2 << 30)),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(2 << 30)),
+		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(1 << 30)),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1 << 30)),
 		grpc.WithKeepaliveParams(keepalive.ClientParameters{
 			Time:                pool.KeepAliveTime,
 			Timeout:             pool.KeepAliveTimeout,
