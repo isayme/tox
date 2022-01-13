@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/url"
 
-	"github.com/isayme/go-logger"
 	"golang.org/x/net/websocket"
 )
 
@@ -24,8 +23,6 @@ func NewClient(tunnel string) (*Client, error) {
 		URL.Scheme = "http"
 	case "wss":
 		URL.Scheme = "https"
-	default:
-		logger.Panicw("URL.Scheme invalid", "address", tunnel, "sceham", URL.Scheme)
 	}
 
 	return &Client{

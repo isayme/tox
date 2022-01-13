@@ -8,6 +8,7 @@ import (
 
 	"github.com/isayme/tox/tunnel/grpc"
 	"github.com/isayme/tox/tunnel/h2"
+	"github.com/isayme/tox/tunnel/quic"
 	"github.com/isayme/tox/tunnel/websocket"
 )
 
@@ -26,6 +27,8 @@ func NewClient(tunnel string) (Client, error) {
 	}
 
 	switch URL.Scheme {
+	case "quic", "http3":
+		return quic.NewClient(tunnel)
 	case "grpc", "grpcs":
 		return grpc.NewClient(tunnel)
 	case "http2", "h2":
@@ -44,6 +47,8 @@ func NewServer(tunnel string) (Server, error) {
 	}
 
 	switch URL.Scheme {
+	case "quic", "http3":
+		return quic.NewServer(tunnel)
 	case "grpc", "grpcs":
 		return grpc.NewServer(tunnel)
 	case "http2", "h2":

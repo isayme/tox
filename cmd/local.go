@@ -21,6 +21,13 @@ func startLocal() {
 		return
 	}
 
+	formatTunnel, err := util.FormatURL(config.Tunnel)
+	if err != nil {
+		logger.Errorf("tunnel '%s' not valid format", config.Tunnel)
+		return
+	}
+	config.Tunnel = formatTunnel
+
 	addr := config.LocalAddress
 	logger.Infof("listen on %s", addr)
 	l, err := net.Listen("tcp", addr)

@@ -5,7 +5,8 @@ log_level: debug
 method: aes-256-cfb
 password: 123456
 # remote_address: https://127.0.0.1:1443/toh2
-tunnel: grpcs://127.0.0.1:1443
+tunnel: quic://127.0.0.1:1443
+# tunnel: grpcs://127.0.0.1:1443
 # tunnel: http2://127.0.0.1:1443/h2
 # tunnel: ws://127.0.0.1:1443/ws
 local_address: 0.0.0.0:8488

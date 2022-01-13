@@ -44,8 +44,6 @@ func NewClient(tunnel string) (*Client, error) {
 		dialOptions = append(dialOptions, grpc.WithInsecure())
 	case "grpcs":
 		dialOptions = append(dialOptions, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})))
-	default:
-		logger.Panicw("URL.Scheme invalid", "address", tunnel, "sceham", URL.Scheme)
 	}
 
 	options := pool.DefaultOptions

@@ -2,14 +2,34 @@ package h2
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
+	"time"
 
-	"github.com/isayme/go-logger"
-	"github.com/isayme/tox/util"
+	"github.com/posener/h2conn"
 )
+
+var h2Client = &h2conn.Client{
+	Method: http.MethodPost,
+	Client: &http.Client{
+		Transport: &http.Transport{
+			DialContext: (&net.Dialer{
+				Timeout:   5 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 10 * time.Second,
+		},
+	},
+}
 
 type Client struct {
 	tunnel string
@@ -23,8 +43,6 @@ func NewClient(tunnel string) (*Client, error) {
 	switch URL.Scheme {
 	case "h2", "http2", "https":
 		URL.Scheme = "https"
-	default:
-		logger.Panicw("URL.Scheme invalid", "address", tunnel, "sceham", URL.Scheme)
 	}
 
 	return &Client{
@@ -33,7 +51,7 @@ func NewClient(tunnel string) (*Client, error) {
 }
 
 func (t *Client) Connect(ctx context.Context) (io.ReadWriteCloser, error) {
-	remote, resp, err := util.H2Client.Connect(ctx, t.tunnel)
+	remote, resp, err := h2Client.Connect(ctx, t.tunnel)
 	if err != nil {
 		return nil, err
 	}

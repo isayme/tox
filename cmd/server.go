@@ -9,6 +9,7 @@ import (
 	"github.com/isayme/tox/middleware"
 	"github.com/isayme/tox/socks5"
 	"github.com/isayme/tox/tunnel"
+	"github.com/isayme/tox/util"
 )
 
 func startServer() {
@@ -19,12 +20,20 @@ func startServer() {
 		return
 	}
 
+	formatTunnel, err := util.FormatURL(config.Tunnel)
+	if err != nil {
+		logger.Errorf("tunnel '%s' not valid format", config.Tunnel)
+		return
+	}
+	config.Tunnel = formatTunnel
+
 	ts, err := tunnel.NewServer(config.Tunnel)
 	if err != nil {
 		logger.Errorw("new tunnel server fail", "err", err)
 		return
 	}
 
+	logger.Infow("start listen", "addr", config.Tunnel)
 	err = ts.ListenAndServeTLS(config.CertFile, config.KeyFile, func(rw io.ReadWriter) {
 		mw := middleware.Get(config.Method)
 		wrapConn := mw(rw, config.Password)
