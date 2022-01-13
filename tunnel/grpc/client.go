@@ -78,16 +78,18 @@ func (t *Client) Connect(ctx context.Context) (io.ReadWriteCloser, error) {
 		return nil, err
 	}
 
-	return NewClientReadWriter(c), nil
+	return NewClientReadWriter(conn, c), nil
 }
 
 type clientReadWriter struct {
+	conn   pool.Conn
 	c      proto.Tunnel_OnConnectClient
 	buffer *bytes.Buffer
 }
 
-func NewClientReadWriter(c proto.Tunnel_OnConnectClient) *clientReadWriter {
+func NewClientReadWriter(conn pool.Conn, c proto.Tunnel_OnConnectClient) *clientReadWriter {
 	return &clientReadWriter{
+		conn:   conn,
 		c:      c,
 		buffer: bytes.NewBuffer(nil),
 	}
@@ -120,5 +122,6 @@ func (rw *clientReadWriter) Write(p []byte) (int, error) {
 }
 
 func (rw *clientReadWriter) Close() error {
+	rw.conn.Close()
 	return rw.c.CloseSend()
 }
