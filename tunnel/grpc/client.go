@@ -20,7 +20,7 @@ type Client struct {
 	p      pool.Pool
 }
 
-func NewClient(tunnel string) (*Client, error) {
+func NewClient(tunnel string, password string) (*Client, error) {
 	URL, err := url.Parse(tunnel)
 	if err != nil {
 		return nil, err
@@ -37,6 +37,7 @@ func NewClient(tunnel string) (*Client, error) {
 			Timeout:             pool.KeepAliveTimeout,
 			PermitWithoutStream: true,
 		}),
+		grpc.WithPerRPCCredentials(newJwtToken([]byte(password))),
 	}
 
 	switch URL.Scheme {
@@ -50,6 +51,7 @@ func NewClient(tunnel string) (*Client, error) {
 	options.Dial = func(address string) (*grpc.ClientConn, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), pool.DialTimeout)
 		defer cancel()
+
 		return grpc.DialContext(ctx, address, dialOptions...)
 	}
 	p, err := pool.New(URL.Host, options)

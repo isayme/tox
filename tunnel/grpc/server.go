@@ -17,11 +17,13 @@ type Server struct {
 
 	handler func(io.ReadWriter)
 	tunnel  string
+	key     []byte
 }
 
-func NewServer(tunnel string) (*Server, error) {
+func NewServer(tunnel string, password string) (*Server, error) {
 	return &Server{
 		tunnel: tunnel,
+		key:    []byte(password),
 	}, nil
 }
 
@@ -51,6 +53,11 @@ func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(io.Rea
 }
 
 func (s *Server) OnConnect(stream proto.Tunnel_OnConnectServer) error {
+	err := VerifyTokenFromContext(stream.Context(), s.key)
+	if err != nil {
+		return err
+	}
+
 	rw := NewServerReadWriter(stream)
 
 	s.handler(rw)

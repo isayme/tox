@@ -9,7 +9,6 @@ import (
 
 type Config struct {
 	LogLevel              string `json:"log_level" yaml:"log_level"`
-	Method                string `json:"method" yaml:"method"`
 	Password              string `json:"password" yaml:"password"`
 	Timeout               int    `json:"timeout" yaml:"timeout"`
 	Tunnel                string `json:"tunnel" yaml:"tunnel"`

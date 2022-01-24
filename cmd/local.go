@@ -8,18 +8,12 @@ import (
 
 	"github.com/isayme/go-logger"
 	"github.com/isayme/tox/conf"
-	"github.com/isayme/tox/middleware"
 	"github.com/isayme/tox/tunnel"
 	"github.com/isayme/tox/util"
 )
 
 func startLocal() {
 	config := conf.Get()
-
-	if middleware.NotExist(config.Method) {
-		logger.Errorf("method '%s' not support", config.Method)
-		return
-	}
 
 	formatTunnel, err := util.FormatURL(config.Tunnel)
 	if err != nil {
@@ -37,7 +31,7 @@ func startLocal() {
 	}
 	defer l.Close()
 
-	tc, err := tunnel.NewClient(config.Tunnel)
+	tc, err := tunnel.NewClient(config.Tunnel, config.Password)
 	if err != nil {
 		logger.Errorw("new tunnel client fail", "err", err)
 		return
@@ -67,12 +61,9 @@ func handleConnection(conn net.Conn, tc tunnel.Client) {
 	}
 	defer remote.Close()
 
-	logger.Info("connect tunnel server ok")
-
-	md := middleware.Get(config.Method)
-	wrapRemote := md(remote, config.Password)
+	logger.Debug("connect tunnel server ok")
 
 	conn = util.NewTimeoutConn(conn, time.Duration(config.Timeout)*time.Second)
-	go io.Copy(wrapRemote, conn)
-	io.Copy(conn, wrapRemote)
+	go io.Copy(remote, conn)
+	io.Copy(conn, remote)
 }
