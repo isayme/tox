@@ -8,16 +8,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var versionFlag bool
+var (
+	versionFlag         bool
+	enableProfilingFlag bool
+)
 
 func init() {
 	rootCmd.Flags().BoolVarP(&versionFlag, "version", "v", false, "show version")
 	rootCmd.AddCommand(localCmd)
 	rootCmd.AddCommand(serverCmd)
+	rootCmd.PersistentFlags().BoolVarP(&enableProfilingFlag, "profiling", "", false, "enable profiling")
 }
 
 var rootCmd = &cobra.Command{
-	Use: "toh2",
+	Use: "tox",
 	Run: func(cmd *cobra.Command, args []string) {
 		if versionFlag {
 			util.PrintVersion()
@@ -30,6 +34,7 @@ var localCmd = &cobra.Command{
 	Use:   "local",
 	Short: "run local",
 	Run: func(cmd *cobra.Command, args []string) {
+		util.EnableProfiling(enableProfilingFlag)
 		startLocal()
 	},
 }
@@ -38,6 +43,7 @@ var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "run server",
 	Run: func(cmd *cobra.Command, args []string) {
+		util.EnableProfiling(enableProfilingFlag)
 		startServer()
 	},
 }
