@@ -40,8 +40,14 @@ var localCmd = &cobra.Command{
 			logger.Info("profiling enabled")
 
 			err := profiler.Start(
-				profiler.WithService(util.Name),
 				profiler.WithVersion(util.Version),
+				profiler.WithProfileTypes(
+					profiler.CPUProfile,
+					profiler.HeapProfile,
+					profiler.BlockProfile,
+					profiler.GoroutineProfile,
+					profiler.MutexProfile,
+				),
 			)
 			if err != nil {
 				logger.Panic(err)
