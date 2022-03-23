@@ -64,6 +64,8 @@ func handleConnection(conn net.Conn, tc tunnel.Client) {
 	logger.Debug("connect tunnel server ok")
 
 	conn = util.NewTimeoutConn(conn, time.Duration(config.Timeout)*time.Second)
+	defer conn.Close()
+
 	go io.Copy(remote, conn)
 	io.Copy(conn, remote)
 }
