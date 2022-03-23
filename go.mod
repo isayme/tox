@@ -3,6 +3,7 @@ module github.com/isayme/tox
 go 1.17
 
 require (
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/isayme/go-bufferpool v0.1.0
 	github.com/isayme/go-config v0.1.0
 	github.com/isayme/go-logger v0.2.0
@@ -12,18 +13,23 @@ require (
 	github.com/posener/h2conn v0.0.0-20180911140238-13e7df33ed15
 	github.com/shimingyah/pool v0.0.0-20190724082523-04bd98b0fbfe
 	github.com/spf13/cobra v1.3.0
-	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f
 	google.golang.org/grpc v1.43.0
 	google.golang.org/protobuf v1.27.1
+	gopkg.in/DataDog/dd-trace-go.v1 v1.37.0
 )
 
 require (
+	github.com/DataDog/datadog-go/v5 v5.0.2 // indirect
+	github.com/DataDog/gostackparse v0.5.0 // indirect
+	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/cheekybits/genny v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
-	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/marten-seemann/qpack v0.2.1 // indirect
 	github.com/marten-seemann/qtls-go1-16 v0.1.4 // indirect
@@ -33,7 +39,7 @@ require (
 	github.com/rs/zerolog v1.19.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/mod v0.5.0 // indirect
-	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d // indirect
+	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.5 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect

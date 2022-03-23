@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/isayme/go-logger"
 	"github.com/isayme/tox/util"
 	"github.com/spf13/cobra"
+	"gopkg.in/DataDog/dd-trace-go.v1/profiler"
 )
 
 var (
@@ -34,7 +36,19 @@ var localCmd = &cobra.Command{
 	Use:   "local",
 	Short: "run local",
 	Run: func(cmd *cobra.Command, args []string) {
-		util.EnableProfiling(enableProfilingFlag)
+		if enableProfilingFlag {
+			logger.Info("profiling enabled")
+
+			err := profiler.Start(
+				profiler.WithService(util.Name),
+				profiler.WithVersion(util.Version),
+			)
+			if err != nil {
+				logger.Panic(err)
+			}
+			defer profiler.Stop()
+		}
+
 		startLocal()
 	},
 }
@@ -43,7 +57,19 @@ var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "run server",
 	Run: func(cmd *cobra.Command, args []string) {
-		util.EnableProfiling(enableProfilingFlag)
+		if enableProfilingFlag {
+			logger.Info("profiling enabled")
+
+			err := profiler.Start(
+				profiler.WithService(util.Name),
+				profiler.WithVersion(util.Version),
+			)
+			if err != nil {
+				logger.Panic(err)
+			}
+			defer profiler.Stop()
+		}
+
 		startServer()
 	},
 }
