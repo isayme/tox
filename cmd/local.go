@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"io"
 	"net"
 	"time"
 
@@ -66,6 +65,6 @@ func handleConnection(conn net.Conn, tc tunnel.Client) {
 	conn = util.NewTimeoutConn(conn, time.Duration(config.Timeout)*time.Second)
 	defer conn.Close()
 
-	go io.Copy(remote, conn)
-	io.Copy(conn, remote)
+	go util.Copy(remote, conn)
+	util.Copy(conn, remote)
 }

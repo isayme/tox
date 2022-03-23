@@ -25,6 +25,7 @@ func Get() *Config {
 	config.Parse(&globalConfig)
 	once.Do(func() {
 		logger.SetLevel(globalConfig.LogLevel)
+		logger.SetFormat("console")
 	})
 	return &globalConfig
 }

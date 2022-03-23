@@ -8,6 +8,7 @@ import (
 
 	"github.com/isayme/go-bufferpool"
 	"github.com/isayme/go-logger"
+	"github.com/isayme/tox/util"
 	"github.com/pkg/errors"
 )
 
@@ -148,8 +149,8 @@ func (r *Request) handleRequest() error {
 	}
 	logger.Info("connect ok")
 
-	go io.Copy(conn, r.rw)
-	io.Copy(r.rw, conn)
+	go util.Copy(conn, r.rw)
+	util.Copy(r.rw, conn)
 
 	return nil
 }
