@@ -85,6 +85,7 @@ func (rw *serverReadWriter) Read(p []byte) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	rw.buffer.Reset()
 	rw.buffer.Write(d.Data)
 
 	return rw.buffer.Read(p)
