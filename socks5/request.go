@@ -149,8 +149,8 @@ func (r *Request) handleRequest() error {
 	}
 	logger.Info("connect ok")
 
-	go util.Copy(conn, r.rw)
-	util.Copy(r.rw, conn)
+	go util.Copy(r.rw, conn)
+	util.Copy(conn, r.rw)
 
 	return nil
 }
