@@ -75,6 +75,7 @@ func (t *Client) Connect(ctx context.Context) (io.ReadWriteCloser, error) {
 	client := proto.NewTunnelClient(conn.Value())
 	c, err := client.OnConnect(ctx)
 	if err != nil {
+		conn.Close()
 		return nil, err
 	}
 
@@ -123,6 +124,6 @@ func (rw *clientReadWriter) Write(p []byte) (int, error) {
 }
 
 func (rw *clientReadWriter) Close() error {
-	rw.conn.Close()
-	return rw.c.CloseSend()
+	rw.c.CloseSend()
+	return rw.conn.Close()
 }

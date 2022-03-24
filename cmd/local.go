@@ -53,7 +53,10 @@ func handleConnection(conn net.Conn, tc tunnel.Client) {
 	logger.Infow("new connection", "remoteAddr", conn.RemoteAddr().String())
 	defer conn.Close()
 
-	remote, err := tc.Connect(context.Background())
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, time.Second*3)
+	defer cancel()
+	remote, err := tc.Connect(ctx)
 	if err != nil {
 		logger.Errorw("connect tunnel server fail", "err", err)
 		return

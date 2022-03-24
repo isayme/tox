@@ -32,7 +32,6 @@ func startServer() {
 		request := socks5.NewRequest(rw)
 		if err := request.Handle(); err != nil {
 			logger.Errorw("socks5 fail", "err", err)
-			rw.Write([]byte("welcome"))
 		}
 	})
 

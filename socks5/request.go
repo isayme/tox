@@ -148,6 +148,8 @@ func (r *Request) handleRequest() error {
 		logger.Infow("net.Dial fail", "err", err, "addr", r.addr)
 		return err
 	}
+	defer conn.Close()
+
 	logger.Info("connect ok")
 
 	go util.Copy(r.rw, conn)
