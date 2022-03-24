@@ -54,7 +54,7 @@ func handleConnection(conn net.Conn, tc tunnel.Client) {
 	defer conn.Close()
 
 	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, time.Second*3)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 	remote, err := tc.Connect(ctx)
 	if err != nil {

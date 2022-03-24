@@ -41,7 +41,7 @@ func NewClient(tunnel string) (*Client, error) {
 }
 
 func (t *Client) Connect(ctx context.Context) (io.ReadWriteCloser, error) {
-	remote, resp, err := h3client.Connect(t.tunnel, time.Second*3, http.Header{})
+	remote, resp, err := h3client.Connect(t.tunnel, time.Second*5, http.Header{})
 	if err != nil {
 		return nil, err
 	}

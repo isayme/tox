@@ -143,7 +143,7 @@ func (r *Request) negotiate() error {
 }
 
 func (r *Request) handleRequest() error {
-	conn, err := net.DialTimeout("tcp", r.addr, time.Second*3)
+	conn, err := net.DialTimeout("tcp", r.addr, time.Second*5)
 	if err != nil {
 		logger.Infow("net.Dial fail", "err", err, "addr", r.addr)
 		return err
