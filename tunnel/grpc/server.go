@@ -46,7 +46,16 @@ func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(io.Rea
 		return err
 	}
 
-	grpcs := grpc.NewServer(grpc.Creds(creds))
+	options := []grpc.ServerOption{
+		grpc.Creds(creds),
+		grpc.MaxRecvMsgSize(MaxRecvMsgSize),
+		grpc.MaxSendMsgSize(MaxSendMsgSize),
+		grpc.ReadBufferSize(ReadBufferSize),
+		grpc.WriteBufferSize(WriteBufferSize),
+		grpc.ConnectionTimeout(ConnectTimeout),
+	}
+
+	grpcs := grpc.NewServer(options...)
 	proto.RegisterTunnelServer(grpcs, s)
 
 	return grpcs.Serve(l)

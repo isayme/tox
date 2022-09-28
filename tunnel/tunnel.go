@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/url"
 
+	"github.com/isayme/go-logger"
 	"github.com/isayme/tox/tunnel/grpc"
 	"github.com/isayme/tox/tunnel/h2"
 	"github.com/isayme/tox/tunnel/quic"
@@ -25,6 +26,8 @@ func NewClient(tunnel string, password string) (Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	logger.Infof("tunnel: %s", tunnel)
 
 	switch URL.Scheme {
 	case "quic", "http3":

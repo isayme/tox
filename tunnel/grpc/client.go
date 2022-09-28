@@ -6,12 +6,14 @@ import (
 	"crypto/tls"
 	"io"
 	"net/url"
+	"time"
 
 	"github.com/isayme/go-logger"
 	"github.com/isayme/tox/proto"
-	"github.com/shimingyah/pool"
+	pool "github.com/isayme/go-grpcpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 )
 
@@ -27,14 +29,17 @@ func NewClient(tunnel string, password string) (*Client, error) {
 	}
 
 	dialOptions := []grpc.DialOption{
-		grpc.WithBackoffMaxDelay(pool.BackoffMaxDelay),
-		grpc.WithInitialWindowSize(pool.InitialWindowSize),
-		grpc.WithInitialConnWindowSize(pool.InitialConnWindowSize),
-		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(1 << 30)),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1 << 30)),
+		grpc.WithBlock(),
+		grpc.WithBackoffMaxDelay(BackoffMaxDelay),
+		grpc.WithInitialWindowSize(InitialWindowSize),
+		grpc.WithInitialConnWindowSize(InitialConnWindowSize),
+		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(MaxSendMsgSize)),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxRecvMsgSize)),
+		grpc.WithReadBufferSize(ReadBufferSize),
+		grpc.WithWriteBufferSize(WriteBufferSize),
 		grpc.WithKeepaliveParams(keepalive.ClientParameters{
-			Time:                pool.KeepAliveTime,
-			Timeout:             pool.KeepAliveTimeout,
+			Time:                KeepAliveTime,
+			Timeout:             KeepAliveTimeout,
 			PermitWithoutStream: true,
 		}),
 		grpc.WithPerRPCCredentials(newJwtToken([]byte(password))),
@@ -42,23 +47,36 @@ func NewClient(tunnel string, password string) (*Client, error) {
 
 	switch URL.Scheme {
 	case "grpc":
-		dialOptions = append(dialOptions, grpc.WithInsecure())
+		dialOptions = append(dialOptions, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	case "grpcs":
 		dialOptions = append(dialOptions, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})))
 	}
 
-	options := pool.DefaultOptions
-	options.Dial = func(address string) (*grpc.ClientConn, error) {
-		ctx, cancel := context.WithTimeout(context.Background(), pool.DialTimeout)
-		defer cancel()
+	options := pool.Options{
+		Dial: func(address string) (*grpc.ClientConn, error) {
+			ctx, cancel := context.WithTimeout(context.Background(), DialTimeout)
+			defer cancel()
 
-		return grpc.DialContext(ctx, address, dialOptions...)
+			return grpc.DialContext(ctx, address, dialOptions...)
+		},
+		MaxIdle:              MaxIdle,
+		MaxActive:            MaxActive,
+		MaxConcurrentStreams: MaxConcurrentStreams,
+		Reuse:                true,
 	}
+
 	p, err := pool.New(URL.Host, options)
 	if err != nil {
 		logger.Errorf("failed to new pool: %v", err)
 		return nil, err
 	}
+
+	go func() {
+		for {
+			time.Sleep(10 * time.Second)
+			logger.Infof("pool status: %s", p.Status())
+		}
+	}()
 
 	return &Client{
 		tunnel: tunnel,

@@ -150,7 +150,7 @@ func (r *Request) handleRequest() error {
 	}
 	defer conn.Close()
 
-	logger.Info("connect ok")
+	logger.Infow("connect ok", "addr", r.addr)
 
 	go util.Copy(r.rw, conn)
 	util.Copy(conn, r.rw)
