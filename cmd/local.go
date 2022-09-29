@@ -68,6 +68,12 @@ func handleConnection(conn net.Conn, tc tunnel.Client) {
 	conn = util.NewTimeoutConn(conn, time.Duration(config.Timeout)*time.Second)
 	defer conn.Close()
 
-	go util.Copy(conn, remote)
+	go func() {
+		_, err := util.Copy(conn, remote)
+		if err != nil {
+			conn.Close()
+		}
+	}()
+
 	util.Copy(remote, conn)
 }
