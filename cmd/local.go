@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/isayme/go-logger"
@@ -50,6 +51,8 @@ func startLocal() {
 func handleConnection(conn net.Conn, tc tunnel.Client) {
 	config := conf.Get()
 
+	var once sync.Once
+
 	logger.Infow("new connection", "remoteAddr", conn.RemoteAddr().String())
 	defer conn.Close()
 
@@ -61,7 +64,7 @@ func handleConnection(conn net.Conn, tc tunnel.Client) {
 		logger.Errorw("connect tunnel server fail", "err", err)
 		return
 	}
-	defer remote.Close()
+	defer once.Do(func() { remote.Close() })
 
 	logger.Debug("connect tunnel server ok")
 
@@ -69,11 +72,9 @@ func handleConnection(conn net.Conn, tc tunnel.Client) {
 	defer conn.Close()
 
 	go func() {
-		_, err := util.Copy(conn, remote)
-		if err != nil {
-			conn.Close()
-		}
+		util.Copy(remote, conn)
+		once.Do(func() { remote.Close() })
 	}()
 
-	util.Copy(remote, conn)
+	util.Copy(conn, remote)
 }
