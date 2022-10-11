@@ -6,11 +6,10 @@ import (
 	"crypto/tls"
 	"io"
 	"net/url"
-	"time"
 
+	pool "github.com/isayme/go-grpcpool"
 	"github.com/isayme/go-logger"
 	"github.com/isayme/tox/proto"
-	pool "github.com/isayme/go-grpcpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -71,13 +70,6 @@ func NewClient(tunnel string, password string) (*Client, error) {
 		return nil, err
 	}
 
-	go func() {
-		for {
-			time.Sleep(10 * time.Second)
-			logger.Infof("pool status: %s", p.Status())
-		}
-	}()
-
 	return &Client{
 		tunnel: tunnel,
 		p:      p,
@@ -91,7 +83,7 @@ func (t *Client) Connect(ctx context.Context) (io.ReadWriteCloser, error) {
 	}
 
 	client := proto.NewTunnelClient(conn.Value())
-	c, err := client.OnConnect(ctx)
+	c, err := client.OnConnect(context.Background())
 	if err != nil {
 		conn.Close()
 		return nil, err
