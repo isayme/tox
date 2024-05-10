@@ -8,17 +8,19 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-type JwtToken struct {
-	key []byte
+type jwtToken struct {
+	key                      []byte
+	requireTransportSecurity bool
 }
 
-func newJwtToken(key []byte) *JwtToken {
-	return &JwtToken{
-		key: key,
+func newJwtToken(key []byte, requireTransportSecurity bool) *jwtToken {
+	return &jwtToken{
+		key:                      key,
+		requireTransportSecurity: requireTransportSecurity,
 	}
 }
 
-func (t *JwtToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+func (t *jwtToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
 	ss, err := util.GenerateJwtToken(t.key)
 	if err != nil {
 		return nil, err
@@ -29,8 +31,8 @@ func (t *JwtToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[s
 	}, nil
 }
 
-func (t *JwtToken) RequireTransportSecurity() bool {
-	return true
+func (t *jwtToken) RequireTransportSecurity() bool {
+	return t.requireTransportSecurity
 }
 
 func VerifyTokenFromContext(ctx context.Context, key []byte) error {

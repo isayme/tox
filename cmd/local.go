@@ -53,7 +53,7 @@ func handleConnection(conn net.Conn, tc tunnel.Client) {
 
 	var once sync.Once
 
-	logger.Infow("new connection", "remoteAddr", conn.RemoteAddr().String())
+	logger.Infow("new connection", "client", conn.RemoteAddr().String())
 	defer conn.Close()
 
 	ctx := context.Background()

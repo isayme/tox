@@ -20,6 +20,24 @@ func NewServer(tunnel string) (*Server, error) {
 	}, nil
 }
 
+func (s *Server) ListenAndServe(handler func(io.ReadWriter)) error {
+	URL, err := url.Parse(s.tunnel)
+	if err != nil {
+		return err
+	}
+
+	s.handler = handler
+
+	http.Handle(URL.Path, websocket.Server{
+		Handshake: s.handshakeWebsocket,
+		Handler:   s.handleWebsocket,
+	})
+
+	addr := fmt.Sprintf(":%s", URL.Port())
+
+	return http.ListenAndServe(addr, nil)
+}
+
 func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(io.ReadWriter)) error {
 	URL, err := url.Parse(s.tunnel)
 	if err != nil {

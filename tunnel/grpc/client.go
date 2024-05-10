@@ -41,21 +41,27 @@ func NewClient(tunnel string, password string) (*Client, error) {
 			Timeout:             KeepAliveTimeout,
 			PermitWithoutStream: true,
 		}),
-		grpc.WithPerRPCCredentials(newJwtToken([]byte(password))),
 	}
 
 	switch URL.Scheme {
 	case "grpc":
-		dialOptions = append(dialOptions, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		dialOptions = append(
+			dialOptions,
+			grpc.WithPerRPCCredentials(newJwtToken([]byte(password), false)),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		)
 	case "grpcs":
-		dialOptions = append(dialOptions, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})))
+		dialOptions = append(
+			dialOptions,
+			grpc.WithPerRPCCredentials(newJwtToken([]byte(password), true)),
+			grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})),
+		)
 	}
 
 	options := pool.Options{
 		Dial: func(address string) (*grpc.ClientConn, error) {
 			ctx, cancel := context.WithTimeout(context.Background(), DialTimeout)
 			defer cancel()
-
 			return grpc.DialContext(ctx, address, dialOptions...)
 		},
 		MaxIdle:              MaxIdle,

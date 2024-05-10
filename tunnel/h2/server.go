@@ -11,13 +11,19 @@ import (
 )
 
 type Server struct {
-	tunnel string
+	tunnel   string
+	password string
 }
 
-func NewServer(tunnel string) (*Server, error) {
+func NewServer(tunnel string, password string) (*Server, error) {
 	return &Server{
-		tunnel: tunnel,
+		tunnel:   tunnel,
+		password: password,
 	}, nil
+}
+
+func (s *Server) ListenAndServe(handler func(io.ReadWriter)) error {
+	return fmt.Errorf("tls required for http2 protocol")
 }
 
 func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(io.ReadWriter)) error {
@@ -27,6 +33,11 @@ func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(io.Rea
 	}
 
 	http.HandleFunc(URL.Path, func(rw http.ResponseWriter, req *http.Request) {
+		if req.Header.Get("token") != s.password {
+			http.Error(rw, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+			return
+		}
+
 		conn, err := h2conn.Accept(rw, req)
 		if err != nil {
 			logger.Infof("failed creating connection from %s: %s", req.RemoteAddr, err)

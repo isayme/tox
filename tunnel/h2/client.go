@@ -13,29 +13,13 @@ import (
 	"github.com/posener/h2conn"
 )
 
-var h2Client = &h2conn.Client{
-	Method: http.MethodPost,
-	Client: &http.Client{
-		Transport: &http.Transport{
-			DialContext: (&net.Dialer{
-				Timeout:   5 * time.Second,
-				KeepAlive: 30 * time.Second,
-			}).DialContext,
-			TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
-			ForceAttemptHTTP2:     true,
-			MaxIdleConns:          100,
-			IdleConnTimeout:       90 * time.Second,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ExpectContinueTimeout: 10 * time.Second,
-		},
-	},
-}
-
 type Client struct {
-	tunnel string
+	tunnel   string
+	password string
+	h2Client *h2conn.Client
 }
 
-func NewClient(tunnel string) (*Client, error) {
+func NewClient(tunnel string, password string) (*Client, error) {
 	URL, err := url.Parse(tunnel)
 	if err != nil {
 		return nil, err
@@ -45,13 +29,37 @@ func NewClient(tunnel string) (*Client, error) {
 		URL.Scheme = "https"
 	}
 
+	headers := http.Header{}
+	if password != "" {
+		headers.Add("token", password)
+	}
+
 	return &Client{
-		tunnel: URL.String(),
+		tunnel:   URL.String(),
+		password: password,
+		h2Client: &h2conn.Client{
+			Method: http.MethodPost,
+			Client: &http.Client{
+				Transport: &http.Transport{
+					DialContext: (&net.Dialer{
+						Timeout:   5 * time.Second,
+						KeepAlive: 30 * time.Second,
+					}).DialContext,
+					TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+					ForceAttemptHTTP2:     true,
+					MaxIdleConns:          100,
+					IdleConnTimeout:       90 * time.Second,
+					TLSHandshakeTimeout:   10 * time.Second,
+					ExpectContinueTimeout: 10 * time.Second,
+				},
+			},
+			Header: headers,
+		},
 	}, nil
 }
 
 func (t *Client) Connect(ctx context.Context) (io.ReadWriteCloser, error) {
-	remote, resp, err := h2Client.Connect(ctx, t.tunnel)
+	remote, resp, err := t.h2Client.Connect(ctx, t.tunnel)
 	if err != nil {
 		return nil, err
 	}

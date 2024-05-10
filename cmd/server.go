@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"io"
-	"log"
 
 	"github.com/isayme/go-logger"
 	"github.com/isayme/tox/conf"
@@ -28,12 +27,20 @@ func startServer() {
 	}
 
 	logger.Infow("start listen", "addr", config.Tunnel)
-	err = ts.ListenAndServeTLS(config.CertFile, config.KeyFile, func(rw io.ReadWriter) {
-		request := socks5.NewRequest(rw)
-		if err := request.Handle(); err != nil {
-			logger.Errorw("socks5 fail", "err", err)
-		}
-	})
+	if config.CertFile == "" && config.KeyFile == "" {
+		err = ts.ListenAndServe(handler)
+	} else {
+		err = ts.ListenAndServeTLS(config.CertFile, config.KeyFile, handler)
+	}
 
-	log.Fatal(err)
+	if err != nil {
+		logger.Errorf("listen fail %v", err)
+	}
+}
+
+func handler(rw io.ReadWriter) {
+	request := socks5.NewRequest(rw)
+	if err := request.Handle(); err != nil {
+		logger.Errorw("socks5 fail", "err", err)
+	}
 }

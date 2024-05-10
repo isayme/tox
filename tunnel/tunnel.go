@@ -9,7 +9,6 @@ import (
 	"github.com/isayme/go-logger"
 	"github.com/isayme/tox/tunnel/grpc"
 	"github.com/isayme/tox/tunnel/h2"
-	"github.com/isayme/tox/tunnel/quic"
 	"github.com/isayme/tox/tunnel/websocket"
 )
 
@@ -18,6 +17,7 @@ type Client interface {
 }
 
 type Server interface {
+	ListenAndServe(handler func(io.ReadWriter)) error
 	ListenAndServeTLS(certFile, keyFile string, handler func(io.ReadWriter)) error
 }
 
@@ -30,12 +30,10 @@ func NewClient(tunnel string, password string) (Client, error) {
 	logger.Infof("tunnel: %s", tunnel)
 
 	switch URL.Scheme {
-	case "quic", "http3":
-		return quic.NewClient(tunnel)
 	case "grpc", "grpcs":
 		return grpc.NewClient(tunnel, password)
 	case "http2", "h2":
-		return h2.NewClient(tunnel)
+		return h2.NewClient(tunnel, password)
 	case "ws", "wss":
 		return websocket.NewClient(tunnel)
 	}
@@ -50,8 +48,6 @@ func NewServer(tunnel string, password string) (Server, error) {
 	}
 
 	switch URL.Scheme {
-	case "quic", "http3":
-		return quic.NewServer(tunnel)
 	case "grpc", "grpcs":
 		return grpc.NewServer(tunnel, password)
 	case "http2", "h2":

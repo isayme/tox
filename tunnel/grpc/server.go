@@ -27,6 +27,35 @@ func NewServer(tunnel string, password string) (*Server, error) {
 	}, nil
 }
 
+func (s *Server) ListenAndServe(handler func(io.ReadWriter)) error {
+	URL, err := url.Parse(s.tunnel)
+	if err != nil {
+		return err
+	}
+
+	s.handler = handler
+
+	addr := fmt.Sprintf(":%s", URL.Port())
+	l, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
+
+	options := []grpc.ServerOption{
+		// grpc.Creds(insecure.NewCredentials()),
+		grpc.MaxRecvMsgSize(MaxRecvMsgSize),
+		grpc.MaxSendMsgSize(MaxSendMsgSize),
+		grpc.ReadBufferSize(ReadBufferSize),
+		grpc.WriteBufferSize(WriteBufferSize),
+		grpc.ConnectionTimeout(ConnectTimeout),
+	}
+
+	grpcs := grpc.NewServer(options...)
+	proto.RegisterTunnelServer(grpcs, s)
+
+	return grpcs.Serve(l)
+}
+
 func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(io.ReadWriter)) error {
 	URL, err := url.Parse(s.tunnel)
 	if err != nil {
