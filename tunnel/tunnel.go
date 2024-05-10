@@ -35,7 +35,7 @@ func NewClient(tunnel string, password string) (Client, error) {
 	case "http2", "h2":
 		return h2.NewClient(tunnel, password)
 	case "ws", "wss":
-		return websocket.NewClient(tunnel)
+		return websocket.NewClient(tunnel, password)
 	}
 
 	return nil, fmt.Errorf("not supported schema: %s", URL.Scheme)
@@ -51,9 +51,9 @@ func NewServer(tunnel string, password string) (Server, error) {
 	case "grpc", "grpcs":
 		return grpc.NewServer(tunnel, password)
 	case "http2", "h2":
-		return h2.NewServer(tunnel)
+		return h2.NewServer(tunnel, password)
 	case "ws", "wss":
-		return websocket.NewServer(tunnel)
+		return websocket.NewServer(tunnel, password)
 	}
 	return nil, fmt.Errorf("not supported schema: %s", URL.Scheme)
 }

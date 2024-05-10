@@ -14,7 +14,7 @@ type Server struct {
 	handler func(io.ReadWriter)
 }
 
-func NewServer(tunnel string) (*Server, error) {
+func NewServer(tunnel string, password string) (*Server, error) {
 	return &Server{
 		tunnel: tunnel,
 	}, nil

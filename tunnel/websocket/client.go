@@ -14,7 +14,7 @@ type Client struct {
 	origin string
 }
 
-func NewClient(tunnel string) (*Client, error) {
+func NewClient(tunnel string, password string) (*Client, error) {
 	URL, err := url.Parse(tunnel)
 	if err != nil {
 		return nil, err
