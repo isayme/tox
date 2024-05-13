@@ -10,8 +10,7 @@ import (
 )
 
 type Client struct {
-	tunnel string
-	origin string
+	config *websocket.Config
 }
 
 func NewClient(tunnel string, password string) (*Client, error) {
@@ -25,20 +24,25 @@ func NewClient(tunnel string, password string) (*Client, error) {
 	case "wss":
 		URL.Scheme = "https"
 	}
+	origin := URL.String()
+
+	wsc, err := websocket.NewConfig(tunnel, origin)
+	if err != nil {
+		return nil, err
+	}
+	if password != "" {
+		wsc.Header.Set("token", password)
+	}
+
+	wsc.TlsConfig = &tls.Config{InsecureSkipVerify: true}
 
 	return &Client{
-		tunnel: tunnel,
-		origin: URL.String(),
+		config: wsc,
 	}, nil
 }
 
 func (t *Client) Connect(ctx context.Context) (io.ReadWriteCloser, error) {
-	c, err := websocket.NewConfig(t.tunnel, t.origin)
-	if err != nil {
-		return nil, err
-	}
-	c.TlsConfig = &tls.Config{InsecureSkipVerify: true}
-	ws, err := websocket.DialConfig(c)
+	ws, err := websocket.DialConfig(t.config)
 	if err != nil {
 		return nil, err
 	}

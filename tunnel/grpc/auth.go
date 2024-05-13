@@ -4,30 +4,24 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/isayme/tox/util"
 	"google.golang.org/grpc/metadata"
 )
 
 type jwtToken struct {
-	key                      []byte
+	token                    string
 	requireTransportSecurity bool
 }
 
-func newJwtToken(key []byte, requireTransportSecurity bool) *jwtToken {
+func newJwtToken(token string, requireTransportSecurity bool) *jwtToken {
 	return &jwtToken{
-		key:                      key,
+		token:                    token,
 		requireTransportSecurity: requireTransportSecurity,
 	}
 }
 
 func (t *jwtToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	ss, err := util.GenerateJwtToken(t.key)
-	if err != nil {
-		return nil, err
-	}
-
 	return map[string]string{
-		"token": ss,
+		"token": t.token,
 	}, nil
 }
 
@@ -35,7 +29,7 @@ func (t *jwtToken) RequireTransportSecurity() bool {
 	return t.requireTransportSecurity
 }
 
-func VerifyTokenFromContext(ctx context.Context, key []byte) error {
+func VerifyTokenFromContext(ctx context.Context, token string) error {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return fmt.Errorf("get context fail")
@@ -47,6 +41,9 @@ func VerifyTokenFromContext(ctx context.Context, key []byte) error {
 	}
 
 	tokenString := tokens[0]
-	err := util.ValidateJwtToken(tokenString, key)
-	return err
+	if tokenString != token {
+		return fmt.Errorf("token invalid")
+	}
+
+	return nil
 }

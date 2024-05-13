@@ -15,7 +15,6 @@ import (
 
 type Client struct {
 	tunnel   string
-	password string
 	h2Client *h2conn.Client
 }
 
@@ -35,8 +34,7 @@ func NewClient(tunnel string, password string) (*Client, error) {
 	}
 
 	return &Client{
-		tunnel:   URL.String(),
-		password: password,
+		tunnel: URL.String(),
 		h2Client: &h2conn.Client{
 			Method: http.MethodPost,
 			Client: &http.Client{

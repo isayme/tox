@@ -10,6 +10,7 @@ import (
 	"github.com/isayme/tox/tunnel/grpc"
 	"github.com/isayme/tox/tunnel/h2"
 	"github.com/isayme/tox/tunnel/websocket"
+	"github.com/isayme/tox/util"
 )
 
 type Client interface {
@@ -26,6 +27,8 @@ func NewClient(tunnel string, password string) (Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	password = util.HashedPassword(password)
 
 	logger.Infof("tunnel: %s", tunnel)
 
@@ -46,6 +49,8 @@ func NewServer(tunnel string, password string) (Server, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	password = util.HashedPassword(password)
 
 	switch URL.Scheme {
 	case "grpc", "grpcs":

@@ -17,13 +17,13 @@ type Server struct {
 
 	handler func(io.ReadWriter)
 	tunnel  string
-	key     []byte
+	key     string
 }
 
 func NewServer(tunnel string, password string) (*Server, error) {
 	return &Server{
 		tunnel: tunnel,
-		key:    []byte(password),
+		key:    password,
 	}, nil
 }
 

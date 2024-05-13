@@ -47,13 +47,13 @@ func NewClient(tunnel string, password string) (*Client, error) {
 	case "grpc":
 		dialOptions = append(
 			dialOptions,
-			grpc.WithPerRPCCredentials(newJwtToken([]byte(password), false)),
+			grpc.WithPerRPCCredentials(newJwtToken(password, false)),
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 	case "grpcs":
 		dialOptions = append(
 			dialOptions,
-			grpc.WithPerRPCCredentials(newJwtToken([]byte(password), true)),
+			grpc.WithPerRPCCredentials(newJwtToken(password, true)),
 			grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})),
 		)
 	}

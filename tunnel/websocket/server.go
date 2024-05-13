@@ -10,13 +10,15 @@ import (
 )
 
 type Server struct {
-	tunnel  string
-	handler func(io.ReadWriter)
+	tunnel   string
+	password string
+	handler  func(io.ReadWriter)
 }
 
 func NewServer(tunnel string, password string) (*Server, error) {
 	return &Server{
-		tunnel: tunnel,
+		tunnel:   tunnel,
+		password: password,
 	}, nil
 }
 
@@ -67,6 +69,11 @@ func (s *Server) handshakeWebsocket(config *websocket.Config, req *http.Request)
 
 func (s *Server) handleWebsocket(ws *websocket.Conn) {
 	defer ws.Close()
+
+	token := ws.Request().Header.Get("token")
+	if token != s.password {
+		return
+	}
 
 	s.handler(ws)
 }
