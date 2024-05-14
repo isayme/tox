@@ -49,12 +49,14 @@ func startLocal() {
 }
 
 func handleConnection(conn net.Conn, tc tunnel.Client) {
+	defer conn.Close()
+
 	config := conf.Get()
 
-	var once sync.Once
+	tcpConn, _ := conn.(*net.TCPConn)
+	conn = util.NewTimeoutConn(conn, time.Duration(config.Timeout)*time.Second)
 
 	logger.Infow("new connection", "client", conn.RemoteAddr().String())
-	defer conn.Close()
 
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
@@ -64,17 +66,34 @@ func handleConnection(conn net.Conn, tc tunnel.Client) {
 		logger.Errorw("connect tunnel server fail", "err", err)
 		return
 	}
-	defer once.Do(func() { remote.Close() })
+	defer remote.Close()
 
 	logger.Debug("connect tunnel server ok")
 
-	conn = util.NewTimeoutConn(conn, time.Duration(config.Timeout)*time.Second)
-	defer conn.Close()
+	wg := sync.WaitGroup{}
+	wg.Add(2)
 
 	go func() {
-		util.Copy(remote, conn)
-		once.Do(func() { remote.Close() })
+		defer wg.Done()
+
+		var err error
+		var n int64
+		n, err = util.CopyBuffer(remote, conn)
+		logger.Debugw("copy from client end", "n", n, "err", err)
+		remote.Close()
 	}()
 
-	util.Copy(conn, remote)
+	go func() {
+		defer wg.Done()
+
+		var err error
+		var n int64
+		n, err = util.CopyBuffer(conn, remote)
+		logger.Debugw("copy from remote end", "n", n, "err", err)
+		tcpConn.CloseWrite()
+	}()
+
+	wg.Wait()
+
+	logger.Debug("handle end")
 }

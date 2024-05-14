@@ -10,7 +10,7 @@ import (
 var bufSize = os.Getpagesize()
 
 // Copy copy with default buf
-func Copy(dst io.Writer, src io.Reader) (written int64, err error) {
+func CopyBuffer(dst io.Writer, src io.Reader) (written int64, err error) {
 	buf := bufferpool.Get(bufSize)
 	defer bufferpool.Put(buf)
 

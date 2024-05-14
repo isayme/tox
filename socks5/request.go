@@ -5,10 +5,12 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/isayme/go-bufferpool"
 	"github.com/isayme/go-logger"
+	"github.com/isayme/tox/conf"
 	"github.com/isayme/tox/util"
 	"github.com/pkg/errors"
 )
@@ -150,14 +152,38 @@ func (r *Request) handleRequest() error {
 	}
 	defer conn.Close()
 
+	config := conf.Get()
+
+	tcpConn, _ := conn.(*net.TCPConn)
+	conn = util.NewTimeoutConn(conn, time.Duration(config.Timeout)*time.Second)
+
 	logger.Infow("connect ok", "addr", r.addr)
 
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
 	go func() {
-		util.Copy(conn, r.rw)
-		conn.Close()
+		defer wg.Done()
+
+		var err error
+		var n int64
+		n, err = util.CopyBuffer(r.rw, conn)
+		logger.Debugw("copy from remote end", "n", n, "err", err)
 	}()
 
-	util.Copy(r.rw, conn)
+	go func() {
+		defer wg.Done()
+
+		var err error
+		var n int64
+		n, err = util.CopyBuffer(conn, r.rw)
+		logger.Debugw("copy from client end", "n", n, "err", err)
+		tcpConn.CloseWrite()
+	}()
+
+	wg.Wait()
+
+	logger.Infow("handle end", "addr", r.addr)
 
 	return nil
 }
