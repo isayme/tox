@@ -2,11 +2,11 @@ package h2
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 
 	"github.com/isayme/go-logger"
+	"github.com/isayme/tox/util"
 	"github.com/posener/h2conn"
 )
 
@@ -22,11 +22,11 @@ func NewServer(tunnel string, password string) (*Server, error) {
 	}, nil
 }
 
-func (s *Server) ListenAndServe(handler func(io.ReadWriter)) error {
+func (s *Server) ListenAndServe(handler func(util.ServerConn)) error {
 	return fmt.Errorf("tls required for http2 protocol")
 }
 
-func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(io.ReadWriter)) error {
+func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(util.ServerConn)) error {
 	URL, err := url.Parse(s.tunnel)
 	if err != nil {
 		return err
@@ -44,9 +44,9 @@ func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(io.Rea
 			http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
-		defer conn.Close()
+		// defer conn.Close()
 
-		handler(conn)
+		handler(&h2LocalConn{Conn: conn})
 	})
 
 	addr := fmt.Sprintf(":%s", URL.Port())

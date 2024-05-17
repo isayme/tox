@@ -3,9 +3,9 @@ package websocket
 import (
 	"context"
 	"crypto/tls"
-	"io"
 	"net/url"
 
+	"github.com/isayme/tox/util"
 	"golang.org/x/net/websocket"
 )
 
@@ -41,10 +41,18 @@ func NewClient(tunnel string, password string) (*Client, error) {
 	}, nil
 }
 
-func (t *Client) Connect(ctx context.Context) (io.ReadWriteCloser, error) {
+func (t *Client) Connect(ctx context.Context) (util.LocalConn, error) {
 	ws, err := websocket.DialConfig(t.config)
 	if err != nil {
 		return nil, err
 	}
-	return ws, nil
+	return &wsLocalConn{Conn: ws}, nil
+}
+
+type wsLocalConn struct {
+	*websocket.Conn
+}
+
+func (conn *wsLocalConn) CloseWrite() error {
+	return conn.Conn.Close()
 }

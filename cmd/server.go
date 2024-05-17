@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"io"
-
 	"github.com/isayme/go-logger"
 	"github.com/isayme/tox/conf"
 	"github.com/isayme/tox/socks5"
@@ -38,8 +36,11 @@ func startServer() {
 	}
 }
 
-func handler(rw io.ReadWriter) {
-	request := socks5.NewRequest(rw)
+/**
+ * return when server will not send data anymore
+ */
+func handler(conn util.ServerConn) {
+	request := socks5.NewRequest(conn)
 	if err := request.Handle(); err != nil {
 		logger.Errorw("socks5 fail", "err", err)
 	}

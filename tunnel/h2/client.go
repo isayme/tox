@@ -4,12 +4,12 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/isayme/tox/util"
 	"github.com/posener/h2conn"
 )
 
@@ -56,7 +56,7 @@ func NewClient(tunnel string, password string) (*Client, error) {
 	}, nil
 }
 
-func (t *Client) Connect(ctx context.Context) (io.ReadWriteCloser, error) {
+func (t *Client) Connect(ctx context.Context) (util.LocalConn, error) {
 	remote, resp, err := t.h2Client.Connect(ctx, t.tunnel)
 	if err != nil {
 		return nil, err
@@ -67,5 +67,15 @@ func (t *Client) Connect(ctx context.Context) (io.ReadWriteCloser, error) {
 		return nil, fmt.Errorf("h2: bad status code: %d", resp.StatusCode)
 	}
 
-	return remote, nil
+	return &h2LocalConn{
+		Conn: remote,
+	}, nil
+}
+
+type h2LocalConn struct {
+	*h2conn.Conn
+}
+
+func (conn *h2LocalConn) CloseWrite() error {
+	return conn.Close()
 }

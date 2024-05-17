@@ -3,11 +3,11 @@ package grpc
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"net"
 	"net/url"
 
 	"github.com/isayme/tox/proto"
+	"github.com/isayme/tox/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -15,7 +15,7 @@ import (
 type Server struct {
 	proto.UnimplementedTunnelServer
 
-	handler func(io.ReadWriter)
+	handler func(util.ServerConn)
 	tunnel  string
 	key     string
 }
@@ -27,7 +27,7 @@ func NewServer(tunnel string, password string) (*Server, error) {
 	}, nil
 }
 
-func (s *Server) ListenAndServe(handler func(io.ReadWriter)) error {
+func (s *Server) ListenAndServe(handler func(util.ServerConn)) error {
 	URL, err := url.Parse(s.tunnel)
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func (s *Server) ListenAndServe(handler func(io.ReadWriter)) error {
 	return grpcs.Serve(l)
 }
 
-func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(io.ReadWriter)) error {
+func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(util.ServerConn)) error {
 	URL, err := url.Parse(s.tunnel)
 	if err != nil {
 		return err
@@ -139,4 +139,8 @@ func (rw *serverReadWriter) Write(p []byte) (int, error) {
 		return 0, err
 	}
 	return len(p), nil
+}
+
+func (rw *serverReadWriter) CloseWrite() error {
+	return nil
 }

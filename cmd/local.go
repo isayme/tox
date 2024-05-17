@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"io"
 	"net"
 	"sync"
 	"time"
@@ -86,11 +85,7 @@ func handleConnection(conn net.Conn, tc tunnel.Client) {
 		var n int64
 		n, err = util.CopyBuffer(remote, conn)
 		logger.Debugw("copy from client end", "n", n, "err", err)
-		if err != nil && err != io.EOF {
-			once.Do(func() {
-				remote.Close()
-			})
-		}
+		remote.CloseWrite()
 	}()
 
 	go func() {

@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	"io"
 	"net/url"
 
 	pool "github.com/isayme/go-grpcpool"
 	"github.com/isayme/go-logger"
 	"github.com/isayme/tox/proto"
+	"github.com/isayme/tox/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -82,7 +82,7 @@ func NewClient(tunnel string, password string) (*Client, error) {
 	}, nil
 }
 
-func (t *Client) Connect(ctx context.Context) (io.ReadWriteCloser, error) {
+func (t *Client) Connect(ctx context.Context) (util.LocalConn, error) {
 	conn, err := t.p.Get()
 	if err != nil {
 		return nil, err
@@ -141,5 +141,10 @@ func (rw *clientReadWriter) Write(p []byte) (int, error) {
 
 func (rw *clientReadWriter) Close() error {
 	rw.c.CloseSend()
-	return rw.conn.Close()
+	rw.conn.Close()
+	return rw.conn.Value().Close()
+}
+
+func (rw *clientReadWriter) CloseWrite() error {
+	return rw.c.CloseSend()
 }

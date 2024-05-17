@@ -2,17 +2,17 @@ package websocket
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 
+	"github.com/isayme/tox/util"
 	"golang.org/x/net/websocket"
 )
 
 type Server struct {
 	tunnel   string
 	password string
-	handler  func(io.ReadWriter)
+	handler  func(util.ServerConn)
 }
 
 func NewServer(tunnel string, password string) (*Server, error) {
@@ -22,7 +22,7 @@ func NewServer(tunnel string, password string) (*Server, error) {
 	}, nil
 }
 
-func (s *Server) ListenAndServe(handler func(io.ReadWriter)) error {
+func (s *Server) ListenAndServe(handler func(util.ServerConn)) error {
 	URL, err := url.Parse(s.tunnel)
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func (s *Server) ListenAndServe(handler func(io.ReadWriter)) error {
 	return http.ListenAndServe(addr, nil)
 }
 
-func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(io.ReadWriter)) error {
+func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(util.ServerConn)) error {
 	URL, err := url.Parse(s.tunnel)
 	if err != nil {
 		return err
@@ -68,12 +68,12 @@ func (s *Server) handshakeWebsocket(config *websocket.Config, req *http.Request)
 }
 
 func (s *Server) handleWebsocket(ws *websocket.Conn) {
-	defer ws.Close()
+	// defer ws.Close()
 
 	token := ws.Request().Header.Get("token")
 	if token != s.password {
 		return
 	}
 
-	s.handler(ws)
+	s.handler(&wsLocalConn{Conn: ws})
 }

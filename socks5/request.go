@@ -16,16 +16,16 @@ import (
 )
 
 type Request struct {
-	rw io.ReadWriter
+	rw util.ServerConn
 
 	cmd  byte
 	atyp byte
 	addr string
 }
 
-func NewRequest(rw io.ReadWriter) *Request {
+func NewRequest(conn util.ServerConn) *Request {
 	return &Request{
-		rw: rw,
+		rw: conn,
 	}
 }
 
@@ -145,17 +145,17 @@ func (r *Request) negotiate() error {
 }
 
 func (r *Request) handleRequest() error {
-	conn, err := net.DialTimeout("tcp", r.addr, time.Second*5)
+	remote, err := net.DialTimeout("tcp", r.addr, time.Second*5)
 	if err != nil {
 		logger.Infow("net.Dial fail", "err", err, "addr", r.addr)
 		return err
 	}
-	defer conn.Close()
+	defer remote.Close()
 
 	config := conf.Get()
 
-	tcpConn, _ := conn.(*net.TCPConn)
-	conn = util.NewTimeoutConn(conn, time.Duration(config.Timeout)*time.Second)
+	remoteTcpConn, _ := remote.(*net.TCPConn)
+	remote = util.NewTimeoutConn(remote, time.Duration(config.Timeout)*time.Second)
 
 	logger.Infow("connect ok", "addr", r.addr)
 
@@ -167,7 +167,8 @@ func (r *Request) handleRequest() error {
 
 		var err error
 		var n int64
-		n, err = util.CopyBuffer(r.rw, conn)
+		n, err = util.CopyBuffer(r.rw, remote)
+		r.rw.CloseWrite()
 		logger.Debugw("copy from remote end", "n", n, "err", err)
 	}()
 
@@ -176,9 +177,9 @@ func (r *Request) handleRequest() error {
 
 		var err error
 		var n int64
-		n, err = util.CopyBuffer(conn, r.rw)
+		n, err = util.CopyBuffer(remote, r.rw)
 		logger.Debugw("copy from client end", "n", n, "err", err)
-		tcpConn.CloseWrite()
+		remoteTcpConn.CloseWrite()
 	}()
 
 	wg.Wait()

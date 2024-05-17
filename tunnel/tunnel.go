@@ -3,7 +3,6 @@ package tunnel
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/url"
 
 	"github.com/isayme/go-logger"
@@ -14,12 +13,12 @@ import (
 )
 
 type Client interface {
-	Connect(context.Context) (io.ReadWriteCloser, error)
+	Connect(context.Context) (util.LocalConn, error)
 }
 
 type Server interface {
-	ListenAndServe(handler func(io.ReadWriter)) error
-	ListenAndServeTLS(certFile, keyFile string, handler func(io.ReadWriter)) error
+	ListenAndServe(handler func(util.ServerConn)) error
+	ListenAndServeTLS(certFile, keyFile string, handler func(util.ServerConn)) error
 }
 
 func NewClient(tunnel string, password string) (Client, error) {
