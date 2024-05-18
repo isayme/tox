@@ -141,8 +141,7 @@ func (rw *clientReadWriter) Write(p []byte) (int, error) {
 
 func (rw *clientReadWriter) Close() error {
 	rw.c.CloseSend()
-	rw.conn.Close()
-	return rw.conn.Value().Close()
+	return rw.conn.Close()
 }
 
 func (rw *clientReadWriter) CloseWrite() error {
