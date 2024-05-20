@@ -3,6 +3,7 @@ package grpc
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net"
 	"net/url"
 
@@ -15,20 +16,19 @@ import (
 type Server struct {
 	proto.UnimplementedTunnelServer
 
-	handler func(util.ServerConn)
-	tunnel  string
-	key     string
+	handler func(util.ToxConn)
+
+	opts util.ToxOptions
 }
 
-func NewServer(tunnel string, password string) (*Server, error) {
+func NewServer(opts util.ToxOptions) (*Server, error) {
 	return &Server{
-		tunnel: tunnel,
-		key:    password,
+		opts: opts,
 	}, nil
 }
 
-func (s *Server) ListenAndServe(handler func(util.ServerConn)) error {
-	URL, err := url.Parse(s.tunnel)
+func (s *Server) ListenAndServe(handler func(util.ToxConn)) error {
+	URL, err := url.Parse(s.opts.Tunnel)
 	if err != nil {
 		return err
 	}
@@ -41,48 +41,24 @@ func (s *Server) ListenAndServe(handler func(util.ServerConn)) error {
 		return err
 	}
 
-	options := []grpc.ServerOption{
-		// grpc.Creds(insecure.NewCredentials()),
-		grpc.MaxRecvMsgSize(MaxRecvMsgSize),
-		grpc.MaxSendMsgSize(MaxSendMsgSize),
-		grpc.ReadBufferSize(ReadBufferSize),
-		grpc.WriteBufferSize(WriteBufferSize),
-		grpc.ConnectionTimeout(ConnectTimeout),
+	options := make([]grpc.ServerOption, 0)
+
+	certFile := s.opts.CertFile
+	keyFile := s.opts.KeyFile
+	if certFile != "" && keyFile != "" {
+		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
+		if err != nil {
+			return err
+		}
+
+		options = append(options, grpc.Creds(creds))
 	}
 
-	grpcs := grpc.NewServer(options...)
-	proto.RegisterTunnelServer(grpcs, s)
-
-	return grpcs.Serve(l)
-}
-
-func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(util.ServerConn)) error {
-	URL, err := url.Parse(s.tunnel)
-	if err != nil {
-		return err
-	}
-
-	s.handler = handler
-
-	creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
-	if err != nil {
-		return err
-	}
-
-	addr := fmt.Sprintf(":%s", URL.Port())
-	l, err := net.Listen("tcp", addr)
-	if err != nil {
-		return err
-	}
-
-	options := []grpc.ServerOption{
-		grpc.Creds(creds),
-		grpc.MaxRecvMsgSize(MaxRecvMsgSize),
-		grpc.MaxSendMsgSize(MaxSendMsgSize),
-		grpc.ReadBufferSize(ReadBufferSize),
-		grpc.WriteBufferSize(WriteBufferSize),
-		grpc.ConnectionTimeout(ConnectTimeout),
-	}
+	options = append(options, grpc.MaxRecvMsgSize(MaxRecvMsgSize))
+	options = append(options, grpc.MaxSendMsgSize(MaxSendMsgSize))
+	options = append(options, grpc.ReadBufferSize(ReadBufferSize))
+	options = append(options, grpc.WriteBufferSize(WriteBufferSize))
+	options = append(options, grpc.ConnectionTimeout(s.opts.ConnectTimeout))
 
 	grpcs := grpc.NewServer(options...)
 	proto.RegisterTunnelServer(grpcs, s)
@@ -91,56 +67,54 @@ func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(util.S
 }
 
 func (s *Server) OnConnect(stream proto.Tunnel_OnConnectServer) error {
-	err := VerifyTokenFromContext(stream.Context(), s.key)
+	err := VerifyTokenFromContext(stream.Context(), s.opts.Password)
 	if err != nil {
 		return err
 	}
 
-	rw := NewServerReadWriter(stream)
-
-	s.handler(rw)
+	s.handler(util.NewToxConnection(NewGrpcServerConn(stream)))
 	return nil
 }
 
-type serverReadWriter struct {
-	c      proto.Tunnel_OnConnectServer
+type GrpcServerConn struct {
+	conn   proto.Tunnel_OnConnectServer
 	buffer *bytes.Buffer
 }
 
-func NewServerReadWriter(c proto.Tunnel_OnConnectServer) *serverReadWriter {
-	return &serverReadWriter{
-		c:      c,
+func NewGrpcServerConn(conn proto.Tunnel_OnConnectServer) io.ReadWriteCloser {
+	return &GrpcServerConn{
+		conn:   conn,
 		buffer: bytes.NewBuffer(nil),
 	}
 }
 
-func (rw *serverReadWriter) Read(p []byte) (int, error) {
-	if rw.buffer.Len() > 0 {
-		return rw.buffer.Read(p)
+func (conn *GrpcServerConn) Read(p []byte) (int, error) {
+	if conn.buffer.Len() > 0 {
+		return conn.buffer.Read(p)
 	}
 
-	d, err := rw.c.Recv()
+	d, err := conn.conn.Recv()
 	if err != nil {
 		return 0, err
 	}
-	rw.buffer.Reset()
-	rw.buffer.Write(d.Data)
+	conn.buffer.Reset()
+	conn.buffer.Write(d.Data)
 
-	return rw.buffer.Read(p)
+	return conn.buffer.Read(p)
 }
 
-func (rw *serverReadWriter) Write(p []byte) (int, error) {
+func (conn *GrpcServerConn) Write(p []byte) (int, error) {
 	d := &proto.Data{
 		Data: p,
 	}
 
-	err := rw.c.Send(d)
+	err := conn.conn.Send(d)
 	if err != nil {
 		return 0, err
 	}
 	return len(p), nil
 }
 
-func (rw *serverReadWriter) CloseWrite() error {
+func (conn *GrpcServerConn) Close() error {
 	return nil
 }

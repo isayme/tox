@@ -8,14 +8,14 @@ import (
 )
 
 type jwtToken struct {
-	token                    string
-	requireTransportSecurity bool
+	token              string
+	insecureSkipVerify bool
 }
 
-func newJwtToken(token string, requireTransportSecurity bool) *jwtToken {
+func newJwtToken(token string, insecureSkipVerify bool) *jwtToken {
 	return &jwtToken{
-		token:                    token,
-		requireTransportSecurity: requireTransportSecurity,
+		token:              token,
+		insecureSkipVerify: insecureSkipVerify,
 	}
 }
 
@@ -26,7 +26,7 @@ func (t *jwtToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[s
 }
 
 func (t *jwtToken) RequireTransportSecurity() bool {
-	return t.requireTransportSecurity
+	return !t.insecureSkipVerify
 }
 
 func VerifyTokenFromContext(ctx context.Context, token string) error {

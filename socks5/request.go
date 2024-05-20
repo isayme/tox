@@ -16,16 +16,18 @@ import (
 )
 
 type Request struct {
-	rw util.ServerConn
+	rw     util.ToxConn
+	config *conf.Config
 
 	cmd  byte
 	atyp byte
 	addr string
 }
 
-func NewRequest(conn util.ServerConn) *Request {
+func NewRequest(config *conf.Config, conn util.ToxConn) *Request {
 	return &Request{
-		rw: conn,
+		config: config,
+		rw:     conn,
 	}
 }
 
@@ -145,17 +147,17 @@ func (r *Request) negotiate() error {
 }
 
 func (r *Request) handleRequest() error {
-	remote, err := net.DialTimeout("tcp", r.addr, time.Second*5)
+	defer r.rw.Close()
+
+	remote, err := net.DialTimeout("tcp", r.addr, time.Second*time.Duration(r.config.ConnectTimeout))
 	if err != nil {
 		logger.Infow("net.Dial fail", "err", err, "addr", r.addr)
 		return err
 	}
 	defer remote.Close()
 
-	config := conf.Get()
-
 	remoteTcpConn, _ := remote.(*net.TCPConn)
-	remote = util.NewTimeoutConn(remote, time.Duration(config.Timeout)*time.Second)
+	remote = util.NewTimeoutConn(remote, time.Duration(r.config.Timeout)*time.Second)
 
 	logger.Infow("connect ok", "addr", r.addr)
 

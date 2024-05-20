@@ -6,7 +6,7 @@ toolchain go1.22.3
 
 require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/isayme/go-bufferpool v0.1.0
+	github.com/isayme/go-bufferpool v0.1.1
 	github.com/isayme/go-config v0.1.0
 	github.com/isayme/go-grpcpool v0.0.0-20220928145230-238f313429cc
 	github.com/isayme/go-logger v0.3.1
@@ -38,5 +38,4 @@ require (
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240227224415-6ceb2ff114de // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

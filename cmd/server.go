@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"time"
+
 	"github.com/isayme/go-logger"
 	"github.com/isayme/tox/conf"
 	"github.com/isayme/tox/socks5"
@@ -10,6 +12,7 @@ import (
 
 func startServer() {
 	config := conf.Get()
+	config.Default()
 
 	formatTunnel, err := util.FormatURL(config.Tunnel)
 	if err != nil {
@@ -18,30 +21,37 @@ func startServer() {
 	}
 	config.Tunnel = formatTunnel
 
-	ts, err := tunnel.NewServer(config.Tunnel, config.Password)
+	if config.Password == "" {
+		logger.Errorf("password is required")
+		return
+	}
+
+	options := []util.ToxOption{
+		util.WithTunnel(config.Tunnel),
+		util.WithPassword(config.Password),
+		util.WithTimeout(time.Second * time.Duration(config.Timeout)),
+		util.WithCertFile(config.CertFile),
+		util.WithKeyFile(config.KeyFile),
+		util.WithConnectTimeout(time.Second * time.Duration(config.ConnectTimeout)),
+	}
+
+	ts, err := tunnel.NewServer(util.ToToxOptions(options))
 	if err != nil {
 		logger.Errorw("new tunnel server fail", "err", err)
 		return
 	}
 
 	logger.Infow("start listen", "addr", config.Tunnel)
-	if config.CertFile == "" && config.KeyFile == "" {
-		err = ts.ListenAndServe(handler)
-	} else {
-		err = ts.ListenAndServeTLS(config.CertFile, config.KeyFile, handler)
-	}
-
+	err = ts.ListenAndServe(func(conn util.ToxConn) {
+		/**
+		 * return when server will not send data anymore
+		 */
+		request := socks5.NewRequest(config, conn)
+		if err := request.Handle(); err != nil {
+			logger.Errorw("socks5 fail", "err", err)
+		}
+	})
 	if err != nil {
 		logger.Errorf("listen fail %v", err)
-	}
-}
-
-/**
- * return when server will not send data anymore
- */
-func handler(conn util.ServerConn) {
-	request := socks5.NewRequest(conn)
-	if err := request.Handle(); err != nil {
-		logger.Errorw("socks5 fail", "err", err)
 	}
 }

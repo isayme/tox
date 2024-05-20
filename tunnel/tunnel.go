@@ -13,51 +13,46 @@ import (
 )
 
 type Client interface {
-	Connect(context.Context) (util.LocalConn, error)
+	Connect(context.Context) (util.ToxConn, error)
 }
 
 type Server interface {
-	ListenAndServe(handler func(util.ServerConn)) error
-	ListenAndServeTLS(certFile, keyFile string, handler func(util.ServerConn)) error
+	ListenAndServe(handler func(util.ToxConn)) error
 }
 
-func NewClient(tunnel string, password string) (Client, error) {
-	URL, err := url.Parse(tunnel)
+func NewClient(opts util.ToxOptions) (Client, error) {
+	URL, err := url.Parse(opts.Tunnel)
 	if err != nil {
 		return nil, err
 	}
 
-	password = util.HashedPassword(password)
-
-	logger.Infof("tunnel: %s", tunnel)
+	logger.Infof("tunnel: %s", opts.Tunnel)
 
 	switch URL.Scheme {
 	case "grpc", "grpcs":
-		return grpc.NewClient(tunnel, password)
+		return grpc.NewClient(opts)
 	case "http2", "h2":
-		return h2.NewClient(tunnel, password)
+		return h2.NewClient(opts)
 	case "ws", "wss":
-		return websocket.NewClient(tunnel, password)
+		return websocket.NewClient(opts)
 	}
 
 	return nil, fmt.Errorf("not supported schema: %s", URL.Scheme)
 }
 
-func NewServer(tunnel string, password string) (Server, error) {
-	URL, err := url.Parse(tunnel)
+func NewServer(opts util.ToxOptions) (Server, error) {
+	URL, err := url.Parse(opts.Tunnel)
 	if err != nil {
 		return nil, err
 	}
 
-	password = util.HashedPassword(password)
-
 	switch URL.Scheme {
 	case "grpc", "grpcs":
-		return grpc.NewServer(tunnel, password)
+		return grpc.NewServer(opts)
 	case "http2", "h2":
-		return h2.NewServer(tunnel, password)
+		return h2.NewServer(opts)
 	case "ws", "wss":
-		return websocket.NewServer(tunnel, password)
+		return websocket.NewServer(opts)
 	}
 	return nil, fmt.Errorf("not supported schema: %s", URL.Scheme)
 }

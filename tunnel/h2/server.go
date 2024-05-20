@@ -11,29 +11,29 @@ import (
 )
 
 type Server struct {
-	tunnel   string
-	password string
+	opts util.ToxOptions
 }
 
-func NewServer(tunnel string, password string) (*Server, error) {
+func NewServer(opts util.ToxOptions) (*Server, error) {
 	return &Server{
-		tunnel:   tunnel,
-		password: password,
+		opts: opts,
 	}, nil
 }
 
-func (s *Server) ListenAndServe(handler func(util.ServerConn)) error {
-	return fmt.Errorf("tls required for http2 protocol")
-}
+func (s *Server) ListenAndServe(handler func(util.ToxConn)) error {
+	certFile := s.opts.CertFile
+	keyFile := s.opts.KeyFile
+	if certFile == "" || keyFile == "" {
+		return fmt.Errorf("certFile and keyFile required for http2 protocol")
+	}
 
-func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(util.ServerConn)) error {
-	URL, err := url.Parse(s.tunnel)
+	URL, err := url.Parse(s.opts.Tunnel)
 	if err != nil {
 		return err
 	}
 
 	http.HandleFunc(URL.Path, func(rw http.ResponseWriter, req *http.Request) {
-		if req.Header.Get("token") != s.password {
+		if req.Header.Get("token") != s.opts.Password {
 			http.Error(rw, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
 		}
@@ -46,7 +46,7 @@ func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(util.S
 		}
 		// defer conn.Close()
 
-		handler(&h2LocalConn{Conn: conn})
+		handler(util.NewToxConnection(conn))
 	})
 
 	addr := fmt.Sprintf(":%s", URL.Port())

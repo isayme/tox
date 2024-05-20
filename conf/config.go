@@ -10,13 +10,19 @@ import (
 type Config struct {
 	Logger LoggerConfig `json:"logger" yaml:"logger"`
 
-	Password              string `json:"password" yaml:"password"`
-	Timeout               int    `json:"timeout" yaml:"timeout"`
-	Tunnel                string `json:"tunnel" yaml:"tunnel"`
-	CertFile              string `json:"cert_file" yaml:"cert_file"`
-	KeyFile               string `json:"key_file" yaml:"key_file"`
-	TLSInsecureSkipVerify bool   `json:"tls_insecure_skip_verify" yaml:"tls_insecure_skip_verify"`
-	LocalAddress          string `json:"local_address" yaml:"local_address"`
+	// options for both client & server
+	Tunnel   string `json:"tunnel" yaml:"tunnel"`
+	Password string `json:"password" yaml:"password"`
+	Timeout  int    `json:"timeout" yaml:"timeout"`
+
+	// server options
+	CertFile string `json:"certFile" yaml:"certFile"`
+	KeyFile  string `json:"keyFile" yaml:"keyFile"`
+
+	// client options
+	ConnectTimeout     int    `json:"connectTimeout" yaml:"connectTimeout"`
+	LocalAddress       string `json:"localAddress" yaml:"localAddress"`
+	InsecureSkipVerify bool   `json:"insecureSkipVerify" yaml:"insecureSkipVerify"`
 }
 
 type LoggerConfig struct {
@@ -33,7 +39,13 @@ func Get() *Config {
 		logger.SetLevel(globalConfig.Logger.Level)
 		logger.SetFormat(globalConfig.Logger.Format)
 
-		logger.Infof("log with level: %s, format %s", globalConfig.Logger.Level, globalConfig.Logger.Format)
+		logger.Debugf("log with level: %s, format %s", globalConfig.Logger.Level, globalConfig.Logger.Format)
 	})
 	return &globalConfig
+}
+
+func (conf *Config) Default() {
+	if conf.ConnectTimeout <= 0 {
+		conf.ConnectTimeout = 3
+	}
 }

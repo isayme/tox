@@ -10,11 +10,11 @@ import (
 )
 
 type Client struct {
-	config *websocket.Config
+	wsConfig *websocket.Config
 }
 
-func NewClient(tunnel string, password string) (*Client, error) {
-	URL, err := url.Parse(tunnel)
+func NewClient(opts util.ToxOptions) (*Client, error) {
+	URL, err := url.Parse(opts.Tunnel)
 	if err != nil {
 		return nil, err
 	}
@@ -26,33 +26,26 @@ func NewClient(tunnel string, password string) (*Client, error) {
 	}
 	origin := URL.String()
 
-	wsc, err := websocket.NewConfig(tunnel, origin)
+	wsConfig, err := websocket.NewConfig(opts.Tunnel, origin)
 	if err != nil {
 		return nil, err
 	}
-	if password != "" {
-		wsc.Header.Set("token", password)
+
+	wsConfig.Header.Set("token", opts.Password)
+
+	wsConfig.TlsConfig = &tls.Config{
+		InsecureSkipVerify: opts.InsecureSkipVerify,
 	}
 
-	wsc.TlsConfig = &tls.Config{InsecureSkipVerify: true}
-
 	return &Client{
-		config: wsc,
+		wsConfig: wsConfig,
 	}, nil
 }
 
-func (t *Client) Connect(ctx context.Context) (util.LocalConn, error) {
-	ws, err := websocket.DialConfig(t.config)
+func (t *Client) Connect(ctx context.Context) (util.ToxConn, error) {
+	ws, err := websocket.DialConfig(t.wsConfig)
 	if err != nil {
 		return nil, err
 	}
-	return &wsLocalConn{Conn: ws}, nil
-}
-
-type wsLocalConn struct {
-	*websocket.Conn
-}
-
-func (conn *wsLocalConn) CloseWrite() error {
-	return conn.Conn.Close()
+	return util.NewToxConnection(ws), nil
 }

@@ -14,6 +14,7 @@ import (
 
 func startLocal() {
 	config := conf.Get()
+	config.Default()
 
 	formatTunnel, err := util.FormatURL(config.Tunnel)
 	if err != nil {
@@ -22,7 +23,22 @@ func startLocal() {
 	}
 	config.Tunnel = formatTunnel
 
+	if config.Password == "" {
+		logger.Errorf("password is required")
+		return
+	}
+
 	addr := config.LocalAddress
+
+	options := []util.ToxOption{
+		util.WithTunnel(config.Tunnel),
+		util.WithPassword(config.Password),
+		util.WithTimeout(time.Second * time.Duration(config.Timeout)),
+		util.WithLocalAddress(addr),
+		util.WithConnectTimeout(time.Second * time.Duration(config.ConnectTimeout)),
+		util.WithInsecureSkipVerify(config.InsecureSkipVerify),
+	}
+
 	logger.Infof("listen on %s", addr)
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -31,7 +47,7 @@ func startLocal() {
 	}
 	defer l.Close()
 
-	tc, err := tunnel.NewClient(config.Tunnel, config.Password)
+	tc, err := tunnel.NewClient(util.ToToxOptions(options))
 	if err != nil {
 		logger.Errorw("new tunnel client fail", "err", err)
 		return
@@ -44,28 +60,24 @@ func startLocal() {
 			continue
 		}
 
-		go handleConnection(conn, tc)
+		go handleConnection(config, conn, tc)
 	}
 }
 
-func handleConnection(conn net.Conn, tc tunnel.Client) {
+func handleConnection(config *conf.Config, conn net.Conn, tc tunnel.Client) {
 	defer conn.Close()
-
-	config := conf.Get()
 
 	tcpConn, _ := conn.(*net.TCPConn)
 	conn = util.NewTimeoutConn(conn, time.Duration(config.Timeout)*time.Second)
 
 	logger.Infow("new connection", "client", conn.RemoteAddr().String())
 
-	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
-	defer cancel()
-	remote, err := tc.Connect(ctx)
+	remote, err := tc.Connect(context.Background())
 	if err != nil {
 		logger.Errorw("connect tunnel server fail", "err", err)
 		return
 	}
+
 	var once sync.Once
 	defer func() {
 		once.Do(func() {

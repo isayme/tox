@@ -10,20 +10,18 @@ import (
 )
 
 type Server struct {
-	tunnel   string
-	password string
-	handler  func(util.ServerConn)
+	opts    util.ToxOptions
+	handler func(util.ToxConn)
 }
 
-func NewServer(tunnel string, password string) (*Server, error) {
+func NewServer(opts util.ToxOptions) (*Server, error) {
 	return &Server{
-		tunnel:   tunnel,
-		password: password,
+		opts: opts,
 	}, nil
 }
 
-func (s *Server) ListenAndServe(handler func(util.ServerConn)) error {
-	URL, err := url.Parse(s.tunnel)
+func (s *Server) ListenAndServe(handler func(util.ToxConn)) error {
+	URL, err := url.Parse(s.opts.Tunnel)
 	if err != nil {
 		return err
 	}
@@ -37,25 +35,13 @@ func (s *Server) ListenAndServe(handler func(util.ServerConn)) error {
 
 	addr := fmt.Sprintf(":%s", URL.Port())
 
-	return http.ListenAndServe(addr, nil)
-}
-
-func (s *Server) ListenAndServeTLS(certFile, keyFile string, handler func(util.ServerConn)) error {
-	URL, err := url.Parse(s.tunnel)
-	if err != nil {
-		return err
+	certKey := s.opts.CertFile
+	keyKey := s.opts.KeyFile
+	if certKey != "" && keyKey != "" {
+		return http.ListenAndServeTLS(addr, certKey, keyKey, nil)
+	} else {
+		return http.ListenAndServe(addr, nil)
 	}
-
-	s.handler = handler
-
-	http.Handle(URL.Path, websocket.Server{
-		Handshake: s.handshakeWebsocket,
-		Handler:   s.handleWebsocket,
-	})
-
-	addr := fmt.Sprintf(":%s", URL.Port())
-
-	return http.ListenAndServeTLS(addr, certFile, keyFile, nil)
 }
 
 func (s *Server) handshakeWebsocket(config *websocket.Config, req *http.Request) error {
@@ -64,16 +50,15 @@ func (s *Server) handshakeWebsocket(config *websocket.Config, req *http.Request)
 	if err == nil && config.Origin == nil {
 		return fmt.Errorf("null origin")
 	}
+
+	token := req.Header.Get("token")
+	if token != s.opts.Password {
+		return fmt.Errorf("invalid password")
+	}
+
 	return err
 }
 
 func (s *Server) handleWebsocket(ws *websocket.Conn) {
-	// defer ws.Close()
-
-	token := ws.Request().Header.Get("token")
-	if token != s.password {
-		return
-	}
-
-	s.handler(&wsLocalConn{Conn: ws})
+	s.handler(util.NewToxConnection(ws))
 }
