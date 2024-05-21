@@ -8,6 +8,7 @@ import (
 	"github.com/isayme/go-logger"
 	"github.com/isayme/tox/tunnel/grpc"
 	"github.com/isayme/tox/tunnel/h2"
+	"github.com/isayme/tox/tunnel/quic"
 	"github.com/isayme/tox/tunnel/websocket"
 	"github.com/isayme/tox/util"
 )
@@ -35,6 +36,8 @@ func NewClient(opts util.ToxOptions) (Client, error) {
 		return h2.NewClient(opts)
 	case "ws", "wss":
 		return websocket.NewClient(opts)
+	case "quic", "http3":
+		return quic.NewClient(opts)
 	}
 
 	return nil, fmt.Errorf("not supported schema: %s", URL.Scheme)
@@ -53,6 +56,8 @@ func NewServer(opts util.ToxOptions) (Server, error) {
 		return h2.NewServer(opts)
 	case "ws", "wss":
 		return websocket.NewServer(opts)
+	case "quic", "http3":
+		return quic.NewServer(opts)
 	}
 	return nil, fmt.Errorf("not supported schema: %s", URL.Scheme)
 }

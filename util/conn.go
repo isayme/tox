@@ -154,7 +154,7 @@ func (conn *ToxConnection) Write(p []byte) (int, error) {
 func (conn *ToxConnection) CloseWrite() error {
 	conn.closeWrite = true
 
-	err := conn.writeFrame(COMMAND_DATA, nil)
+	err := conn.writeFrame(COMMAND_CLOSE_WRITE, nil)
 	if err != nil {
 		return err
 	}

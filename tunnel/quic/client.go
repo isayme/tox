@@ -1,23 +1,22 @@
-package h2
+package quic
 
 import (
 	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
-	"time"
 
+	"github.com/isayme/tox/h3conn"
 	"github.com/isayme/tox/util"
-	"github.com/posener/h2conn"
+	"github.com/quic-go/quic-go/http3"
 )
 
 type Client struct {
-	tunnel   string
-	opts     util.ToxOptions
-	h2Client *h2conn.Client
+	serverAddr string
+	opts       util.ToxOptions
+	h3Client   *h3conn.Client
 }
 
 func NewClient(opts util.ToxOptions) (*Client, error) {
@@ -27,7 +26,7 @@ func NewClient(opts util.ToxOptions) (*Client, error) {
 	}
 
 	switch URL.Scheme {
-	case "h2", "http2", "https":
+	case "quic", "http3":
 		URL.Scheme = "https"
 	}
 
@@ -36,23 +35,15 @@ func NewClient(opts util.ToxOptions) (*Client, error) {
 	headers.Add("token", password)
 
 	return &Client{
-		tunnel: URL.String(),
-		h2Client: &h2conn.Client{
+		serverAddr: URL.String(),
+		opts:       opts,
+		h3Client: &h3conn.Client{
 			Method: http.MethodPost,
 			Client: &http.Client{
-				Transport: &http.Transport{
-					DialContext: (&net.Dialer{
-						Timeout:   opts.ConnectTimeout,
-						KeepAlive: 30 * time.Second,
-					}).DialContext,
+				Transport: &http3.RoundTripper{
 					TLSClientConfig: &tls.Config{
 						InsecureSkipVerify: opts.InsecureSkipVerify,
 					},
-					ForceAttemptHTTP2:     true,
-					MaxIdleConns:          100,
-					IdleConnTimeout:       opts.Timeout,
-					TLSHandshakeTimeout:   opts.ConnectTimeout,
-					ExpectContinueTimeout: opts.ConnectTimeout,
 				},
 			},
 			Header: headers,
@@ -61,32 +52,32 @@ func NewClient(opts util.ToxOptions) (*Client, error) {
 }
 
 func (t *Client) Connect(ctx context.Context) (util.ToxConn, error) {
-	remote, resp, err := t.h2Client.Connect(ctx, t.tunnel)
+	remote, resp, err := t.h3Client.Connect(ctx, t.serverAddr)
 	if err != nil {
 		return nil, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		remote.Close()
-		return nil, fmt.Errorf("h2: bad status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("h3: bad status code: %d", resp.StatusCode)
 	}
 
 	return util.NewToxConnection(newHttp2ClientConnection(remote, resp)), nil
 }
 
-type http2ClientConnection struct {
-	*h2conn.Conn
+type http3ClientConnection struct {
+	*h3conn.Conn
 	resp *http.Response
 }
 
-func newHttp2ClientConnection(conn *h2conn.Conn, resp *http.Response) io.ReadWriteCloser {
-	return &http2ClientConnection{
+func newHttp2ClientConnection(conn *h3conn.Conn, resp *http.Response) io.ReadWriteCloser {
+	return &http3ClientConnection{
 		Conn: conn,
 		resp: resp,
 	}
 }
 
-func (conn *http2ClientConnection) Close() error {
+func (conn *http3ClientConnection) Close() error {
 	conn.Conn.Close()
 	return conn.resp.Body.Close()
 }
