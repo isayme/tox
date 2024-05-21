@@ -1,9 +1,14 @@
-log_level: debug
+logger:
+  level: debug
 
 tunnel: grpcs://127.0.0.1:1443
 # tunnel: grpcs://127.0.0.1:1443
-# tunnel: http2://127.0.0.1:1443/h2
-# tunnel: wss://127.0.0.1:1443/ws
-local_address: 0.0.0.0:8488
-cert_file: ./testdata/server.pem
-key_file: ./testdata/server.key
+# tunnel: http2://127.0.0.1:1443
+# tunnel: wss://127.0.0.1:1443
+# tunnel: quic://127.0.0.1:1443
+localAddress: 0.0.0.0:1080
+password: yourpassword
+# certFile: ./testdata/server.pem
+# keyFile: ./testdata/server.key
+timeout: 120
+connectTimeout: 5
