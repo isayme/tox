@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 
+	"sync/atomic"
+
 	"github.com/isayme/go-bufferpool"
 	"github.com/vmihailenco/msgpack/v5"
 )
@@ -35,7 +37,7 @@ type ToxConn interface {
 type ToxConnection struct {
 	conn       io.ReadWriteCloser
 	buffer     *bytes.Buffer
-	closeWrite bool
+	closeWrite atomic.Bool
 }
 
 func NewToxConnection(conn io.ReadWriteCloser) ToxConn {
@@ -139,7 +141,7 @@ func (conn *ToxConnection) writeFrame(cmd uint8, p []byte) error {
 }
 
 func (conn *ToxConnection) Write(p []byte) (int, error) {
-	if conn.closeWrite {
+	if conn.closeWrite.Load() {
 		return 0, errBrokenPipe
 	}
 
@@ -152,7 +154,9 @@ func (conn *ToxConnection) Write(p []byte) (int, error) {
 }
 
 func (conn *ToxConnection) CloseWrite() error {
-	conn.closeWrite = true
+	if !conn.closeWrite.CompareAndSwap(false, true) {
+		return nil
+	}
 
 	err := conn.writeFrame(COMMAND_CLOSE_WRITE, nil)
 	if err != nil {
