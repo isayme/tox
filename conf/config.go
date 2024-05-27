@@ -48,4 +48,8 @@ func (conf *Config) Default() {
 	if conf.ConnectTimeout <= 0 {
 		conf.ConnectTimeout = 3
 	}
+
+	if conf.LocalAddress == "" {
+		conf.LocalAddress = ":1080"
+	}
 }
