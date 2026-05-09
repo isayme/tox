@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/isayme/go-bufferpool v0.1.1
-	github.com/isayme/go-config v0.1.0
+	github.com/isayme/go-config v0.3.0
 	github.com/isayme/go-logger v0.3.1
 	github.com/pkg/errors v0.9.1
 	github.com/posener/h2conn v0.0.0-20180911140238-13e7df33ed15
@@ -30,7 +30,6 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/text v0.36.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 require (
@@ -45,4 +44,5 @@ require (
 	golang.org/x/sys v0.43.0 // indirect
 	golang.org/x/tools v0.43.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240227224415-6ceb2ff114de // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
