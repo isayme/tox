@@ -62,7 +62,7 @@ func (c *Client) Connect(ctx context.Context, urlStr string) (*Conn, *http.Respo
 
 var defaultClient = Client{
 	Method: http.MethodPost,
-	Client: &http.Client{Transport: &http3.RoundTripper{}},
+	Client: &http.Client{Transport: &http3.Transport{}},
 }
 
 // Connect establishes a full duplex communication with an HTTP3 server.

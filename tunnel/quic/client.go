@@ -40,7 +40,7 @@ func NewClient(opts util.ToxOptions) (*Client, error) {
 		h3Client: &h3conn.Client{
 			Method: http.MethodPost,
 			Client: &http.Client{
-				Transport: &http3.RoundTripper{
+				Transport: &http3.Transport{
 					TLSClientConfig: &tls.Config{
 						InsecureSkipVerify: opts.InsecureSkipVerify,
 					},

@@ -42,7 +42,6 @@ func (s *Server) ListenAndServe(handler func(util.ToxConn)) error {
 			HandshakeIdleTimeout: s.opts.ConnectTimeout,
 			MaxIdleTimeout:       s.opts.Timeout,
 		},
-		StreamHijacker: nil,
 	}
 
 	http.HandleFunc(URL.Path, func(rw http.ResponseWriter, req *http.Request) {
@@ -64,7 +63,7 @@ func (s *Server) ListenAndServe(handler func(util.ToxConn)) error {
 	return server.ListenAndServeTLS(certFile, keyFile)
 }
 
-func handleConnection(conn quic.Connection, handler func(util.ToxConn)) {
+func handleConnection(conn *quic.Conn, handler func(util.ToxConn)) {
 	defer conn.CloseWithError(0, "")
 
 	for {
@@ -78,6 +77,6 @@ func handleConnection(conn quic.Connection, handler func(util.ToxConn)) {
 	}
 }
 
-func handleStream(stream quic.Stream, handler func(util.ToxConn)) {
+func handleStream(stream *quic.Stream, handler func(util.ToxConn)) {
 	handler(util.NewToxConnection(stream))
 }
