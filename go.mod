@@ -10,7 +10,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/posener/h2conn v0.0.0-20180911140238-13e7df33ed15
 	github.com/quic-go/quic-go v0.44.0
-	github.com/spf13/cobra v1.3.0
+	github.com/spf13/cobra v1.10.2
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/crypto v0.50.0
 	golang.org/x/net v0.53.0
@@ -25,9 +25,9 @@ require (
 	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/rs/zerolog v1.26.1 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 	golang.org/x/text v0.36.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f // indirect
 )
