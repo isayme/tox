@@ -45,16 +45,18 @@ Reading after the remote peer sends `CLOSE_WRITE` returns `io.EOF`.
 
 ## gRPC-specific Framing
 
-gRPC tunnel (`tunnel/grpc/`) does NOT use the msgpack frame protocol. Instead, it uses protobuf messages on a bidirectional gRPC stream:
+gRPC tunnel (`tunnel/grpc/`) uses a layered approach:
 
-```protobuf
-service Tunnel {
-  rpc OnConnect(stream Data) returns (stream Data);
-}
+1. **Transport layer**: bidirectional gRPC stream carrying protobuf `Data` messages:
+   ```protobuf
+   service Tunnel {
+     rpc OnConnect(stream Data) returns (stream Data);
+   }
 
-message Data {
-  bytes data = 1;
-}
-```
+   message Data {
+     bytes data = 1;
+   }
+   ```
+2. **Frame layer**: the same msgpack frame protocol described above, applied on top of the protobuf stream. `GrpcClientConn` and `GrpcServerConn` implement `io.ReadWriteCloser` over the gRPC stream, and `util.NewToxConnection()` wraps them with the 4-byte-length + msgpack frame encoding.
 
-The gRPC client and server connectors implement `io.ReadWriteCloser` directly over the protobuf stream, reading/writing `Data` messages.
+This means the wire format for gRPC is: protobuf `Data` messages whose `data` bytes contain msgpack-encoded `Frame` structs.

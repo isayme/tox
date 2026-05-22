@@ -10,10 +10,10 @@ tox is a TCP-over-tunnel proxy. It tunnels TCP streams between a local client an
                     ┌─────────────────────────────┐
                     │        tox local             │
                     │                              │
-  ┌──────────┐      │  ┌────────┐    ┌─────────┐  │
-  │ client   │◄─TCP─┤  │ SOCKS5 │───►│ tunnel  │  │
-  │ app      │      │  │ handler│    │ client  │  │
-  └──────────┘      │  └────────┘    └────┬────┘  │
+  ┌──────────┐      │              ┌─────────┐  │
+  │ client   │◄─TCP─┤  raw TCP ──►│ tunnel  │  │
+  │ app      │      │  relay       │ client  │  │
+  └──────────┘      │              └────┬────┘  │
                     │                     │       │
                     └─────────────────────┼───────┘
                                           │
@@ -48,7 +48,7 @@ conf/
   config.go      # YAML config loading, defaults
 tunnel/
   tunnel.go      # Client/Server interfaces + dispatch by URL scheme
-  grpc/          # gRPC tunnel (bidirectional stream + JWT)
+  grpc/          # gRPC tunnel (bidirectional protobuf stream + token auth)
   h2/            # HTTP/2 tunnel (h2conn full-duplex)
   quic/          # HTTP/3 tunnel (quic-go + h3conn full-duplex)
   websocket/     # WebSocket tunnel
@@ -69,12 +69,12 @@ config/
 
 ## Data Flow
 
-1. Client app connects to `tox local` via SOCKS5 (default `:1080`)
-2. `local` performs SOCKS5 handshake, extracts target address
+1. Client app (e.g. curl with `--socks5` flag) connects to `tox local` via TCP (default `:1080`)
+2. `local` accepts the raw TCP connection
 3. `local` establishes a tunnel connection to `tox server`
-4. `local` begins bidirectional copy: client ↔ tunnel
-5. `server` accepts tunnel connection, reads SOCKS5 request from stream
-6. `server` dials the target TCP address
+4. `local` begins bidirectional copy: raw client bytes ↔ tunnel
+5. `server` accepts tunnel connection, parses the SOCKS5 handshake from the stream
+6. `server` dials the target TCP address on behalf of the client
 7. `server` begins bidirectional copy: tunnel ↔ target
 
 ## Tunnel Interface
