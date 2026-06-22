@@ -9,7 +9,7 @@ require (
 	github.com/isayme/go-logger v0.3.1
 	github.com/pkg/errors v0.9.1
 	github.com/posener/h2conn v0.0.0-20180911140238-13e7df33ed15
-	github.com/quic-go/quic-go v0.59.0
+	github.com/quic-go/quic-go v0.60.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
 	github.com/vmihailenco/msgpack/v5 v5.4.1
