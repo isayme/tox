@@ -25,3 +25,30 @@ jobs:
 
       - name: Build
         run: mkdir -p dist && go build -o ./dist/tox main.go
+
+  dependabot:
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+      
+    if: ${{ github.actor == 'dependabot[bot]' && github.event_name == 'pull_request'}}
+    steps:
+      - id: metadata
+        uses: dependabot/fetch-metadata@v3
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          
+      # - name: Approve Dependabot PR
+      #   run: gh pr review --approve "$PR_URL"
+      #   env:
+      #     PR_URL: ${{ github.event.pull_request.html_url }}
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Enable auto-merge for Dependabot PRs
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
