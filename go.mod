@@ -1,6 +1,6 @@
 module github.com/isayme/tox
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -13,7 +13,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.56.0
 	golang.org/x/net v0.58.0
 	google.golang.org/grpc v1.83.0
 	google.golang.org/protobuf v1.36.11
